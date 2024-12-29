@@ -1,5 +1,5 @@
+import { Body, Logger } from '@nestjs/common';
 import {
-  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -8,28 +8,27 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MediasoupService } from './mediasoup.service';
-import { Body } from '@nestjs/common';
-
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({ cors: '*' })
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  private readonly logger = new Logger(MediasoupGateway.name);
   constructor(private readonly mediasoupService: MediasoupService) {}
 
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: Socket, ...args: any[]) {
-    console.log(`Client connected: ${client.id}`, args);
+  handleConnection(client: Socket) {
+    this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('createTransport')
-  async createTransport(@ConnectedSocket() client: Socket) {
-    const transport = await this.mediasoupService.createWebRtcTransport();
+  async createTransport(@Body() { roomId }: { roomId: string }) {
+    const transport = await this.mediasoupService.createWebRtcTransport(roomId);
     return {
       id: transport.id,
       iceParameters: transport.iceParameters,
@@ -39,52 +38,52 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('connectTransport')
-  async connect(
-    @ConnectedSocket() client: Socket,
-    @Body() { transportId, dtlsParameters },
-  ) {
+  async connect(@Body() { roomId, transportId, dtlsParameters }) {
     console.log({ transportId, dtlsParameters });
-    await this.mediasoupService.connect(transportId, dtlsParameters);
+    await this.mediasoupService.connect(roomId, transportId, dtlsParameters);
   }
   @SubscribeMessage('produce')
-  async produce(
-    @ConnectedSocket() client: Socket,
-    @Body() { transportId, kind, rtpParameters },
-  ) {
-    console.log({ transportId, kind, rtpParameters });
+  async produce(@Body() { roomId, transportId, kind, rtpParameters }) {
     const producer = await this.mediasoupService.produce(
+      roomId,
       transportId,
       kind,
       rtpParameters,
     );
-    console.log({ producer });
-    console.log({ producerId: producer.id });
     return producer.id;
   }
 
   @SubscribeMessage('consume')
-  async consume(
-    @ConnectedSocket() client: Socket,
-    @Body() { producerId, rtpCapabilities, consumerId },
-  ) {
-    console.log({ producerId, rtpCapabilities, consumerId });
+  async consume(@Body() { roomId, producerId, rtpCapabilities, consumerId }) {
     const consumer = await this.mediasoupService.consume(
+      roomId,
       consumerId,
       producerId,
       rtpCapabilities,
     );
-    console.log({ consumer });
     return {
       kind: consumer.kind,
       rtpParameters: consumer.rtpParameters,
       id: consumer.id,
     };
   }
+
+  @SubscribeMessage('resumeConsumer')
+  async resumeConsumer(
+    @Body() { consumerId, roomId }: { consumerId: string; roomId: string },
+  ) {
+    await this.mediasoupService.resumeConsumer(roomId, consumerId);
+  }
   @SubscribeMessage('getRouterRtpCapabilities')
-  async getRouterRtpCapabilities(@ConnectedSocket() client: Socket) {
+  async getRouterRtpCapabilities(@Body() { roomId }: { roomId: string }) {
     return {
       routerRtpCapabilities:
-        await this.mediasoupService.getRouterRtpCapabilities(),
+        await this.mediasoupService.getRouterRtpCapabilities(roomId),
     };
+  }
+
+  @SubscribeMessage('getRoomProducers')
+  async getRoomProducers(@Body() { roomId }: { roomId: string }) {
+    return this.mediasoupService.getRoomProducers(roomId);
   }
 }

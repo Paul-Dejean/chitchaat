@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { createWorker, types as MediasoupTypes } from 'mediasoup';
-console.log(process.env);
 
 @Injectable()
 export class MediasoupService {
   private worker: MediasoupTypes.Worker;
-  private router: MediasoupTypes.Router;
-  private transports: MediasoupTypes.WebRtcTransport[] = [];
+
+  private transports: Map<string, MediasoupTypes.WebRtcTransport[]> = new Map();
+  private producers: Map<string, MediasoupTypes.Producer[]> = new Map();
+  private consumers: Map<string, MediasoupTypes.Consumer[]> = new Map();
+  private routers: Map<string, MediasoupTypes.Router> = new Map();
 
   constructor() {
     this.initMediasoup();
@@ -24,7 +26,9 @@ export class MediasoupService {
       console.error('mediasoup worker died, exiting in 2 seconds...');
       setTimeout(() => process.exit(1), 2000);
     });
+  }
 
+  async createRouter(roomId: string) {
     const mediaCodecs: MediasoupTypes.RtpCodecCapability[] = [
       {
         kind: 'audio',
@@ -41,18 +45,20 @@ export class MediasoupService {
         },
       },
     ];
-
-    this.router = await this.worker.createRouter({ mediaCodecs });
+    const router = await this.worker.createRouter({ mediaCodecs });
+    this.routers.set(roomId, router);
+    return router;
   }
-  async createWebRtcTransport() {
+  async createWebRtcTransport(roomId: string) {
     const { listenIps, initialAvailableOutgoingBitrate } = {
       listenIps: [{ ip: '0.0.0.0', announcedIp: '127.0.0.1' }],
       initialAvailableOutgoingBitrate: 1000000,
     };
 
-    console.log({ listenIps });
+    const router = this.routers.get(roomId);
+    console.log(this.routers);
 
-    const transport = await this.router.createWebRtcTransport({
+    const transport = await router.createWebRtcTransport({
       listenIps,
       enableUdp: true,
       enableTcp: true,
@@ -60,17 +66,20 @@ export class MediasoupService {
       initialAvailableOutgoingBitrate,
     });
 
-    console.log({ transport: transport.id });
-    this.transports.push(transport);
+    if (!this.transports.has(roomId)) {
+      this.transports.set(roomId, []);
+    }
 
+    this.transports.get(roomId).push(transport);
     return transport;
   }
 
   async connect(
+    roomId,
     transportId: string,
     dtlsParameters: MediasoupTypes.DtlsParameters,
   ) {
-    const transport = this.getTransportById(transportId);
+    const transport = this.getTransportById(roomId, transportId);
 
     if (!transport) {
       throw new Error('Transport not found');
@@ -81,11 +90,12 @@ export class MediasoupService {
   }
 
   async produce(
+    roomId: string,
     transportId: string,
     kind: 'video' | 'audio',
     rtpParameters: MediasoupTypes.RtpParameters,
   ) {
-    const transport = this.getTransportById(transportId);
+    const transport = this.getTransportById(roomId, transportId);
 
     if (!transport) {
       throw new Error('Transport not found');
@@ -96,36 +106,30 @@ export class MediasoupService {
       rtpParameters,
     });
 
+    if (!this.producers.has(roomId)) {
+      this.producers.set(roomId, []);
+    }
+
+    this.producers.get(roomId).push(producer);
+
     return producer;
   }
 
   async consume(
+    roomId: string,
     consumerId: string,
     producerId: string,
     rtpCapabilities: MediasoupTypes.RtpCapabilities,
   ) {
-    console.log({ transportIds: this.transports.map((t) => t.id) });
-    const consumerTransport = this.getTransportById(consumerId);
+    const consumerTransport = this.getTransportById(roomId, consumerId);
 
     if (!consumerTransport) {
       throw new Error('Transport not found');
     }
-    console.log('canConsume', {
-      producerId,
-      // rtpCapabilities,
-      canConsume: this.router.canConsume({ producerId, rtpCapabilities }),
-    });
-    // console.log(this.router.rtpCapabilities);
-    // console.log(rtpCapabilities);
-    if (!this.router.canConsume({ producerId, rtpCapabilities })) {
+
+    if (!this.routers.get(roomId).canConsume({ producerId, rtpCapabilities })) {
       throw new Error('Cannot consume');
     }
-
-    console.log('Consuming', {
-      producerId,
-      rtpCapabilities,
-      consumerTransport,
-    });
 
     try {
       const consumer = await consumerTransport.consume({
@@ -134,9 +138,11 @@ export class MediasoupService {
         paused: true, // Start in paused state, resume after transport connect
       });
 
-      setTimeout(async () => {
-        await consumer.resume();
-      }, 1000);
+      if (!this.consumers.has(roomId)) {
+        this.consumers.set(roomId, []);
+      }
+
+      this.consumers.get(roomId).push(consumer);
 
       return consumer;
     } catch (error) {
@@ -144,10 +150,27 @@ export class MediasoupService {
     }
   }
 
-  public async getRouterRtpCapabilities() {
-    return this.router.rtpCapabilities;
+  async resumeConsumer(roomId: string, consumerId: string) {
+    const consumer = this.consumers
+      .get(roomId)
+      .find((roomConsumer) => roomConsumer.id === consumerId);
+    await consumer.resume();
   }
-  private getTransportById(transportId: string) {
-    return this.transports.find((transport) => transport.id === transportId);
+
+  public async getRouterRtpCapabilities(roomId: string) {
+    return this.routers.get(roomId).rtpCapabilities;
+  }
+
+  public getRoomProducers(roomId: string) {
+    const roomProducers = this.producers.get(roomId);
+    if (!roomProducers) return [];
+    return roomProducers.map((producer) => ({
+      id: producer.id,
+    }));
+  }
+  private getTransportById(roomId: string, transportId: string) {
+    return this.transports
+      .get(roomId)
+      .find((transport) => transport.id === transportId);
   }
 }
