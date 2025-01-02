@@ -1,5 +1,6 @@
 import { Body, Logger } from '@nestjs/common';
 import {
+  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -26,6 +27,14 @@ export class MediasoupGateway
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
+  @SubscribeMessage('joinRoom')
+  async joinRoom(
+    @ConnectedSocket() client: Socket,
+    @Body() { roomId }: { roomId: string; displayName: string },
+  ) {
+    // client.join(roomId);
+  }
+
   @SubscribeMessage('createTransport')
   async createTransport(@Body() { roomId }: { roomId: string }) {
     const transport = await this.mediasoupService.createWebRtcTransport(roomId);
@@ -42,6 +51,7 @@ export class MediasoupGateway
     console.log({ transportId, dtlsParameters });
     await this.mediasoupService.connect(roomId, transportId, dtlsParameters);
   }
+
   @SubscribeMessage('produce')
   async produce(@Body() { roomId, transportId, kind, rtpParameters }) {
     const producer = await this.mediasoupService.produce(
@@ -50,6 +60,7 @@ export class MediasoupGateway
       kind,
       rtpParameters,
     );
+    this.server.emit('newPeer', { producerId: producer.id });
     return producer.id;
   }
 
@@ -80,10 +91,5 @@ export class MediasoupGateway
       routerRtpCapabilities:
         await this.mediasoupService.getRouterRtpCapabilities(roomId),
     };
-  }
-
-  @SubscribeMessage('getRoomProducers')
-  async getRoomProducers(@Body() { roomId }: { roomId: string }) {
-    return this.mediasoupService.getRoomProducers(roomId);
   }
 }

@@ -5,13 +5,18 @@ import { BiLogoBaidu } from "react-icons/bi";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { VideoBoard } from "@/components/VideoBoard";
+import { RoomContext } from "@/contexts/RoomContext";
+import { useContext } from "react";
+import { store } from "@/store";
 
 export default function RoomPage() {
   const searchParams = useSearchParams();
   const roomId = searchParams.get("roomId") as string;
 
   const room = useSWR(roomId, getRoomById).data;
-  console.log({ room });
+
+  const roomClient = useContext(RoomContext);
+  roomClient.setStore(store);
   return (
     <div className="mx-8">
       <div className="pt-4 flex gap-x-4 items-center">

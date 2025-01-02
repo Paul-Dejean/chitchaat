@@ -112,6 +112,8 @@ export class MediasoupService {
 
     this.producers.get(roomId).push(producer);
 
+    console.log({ producers: this.producers });
+
     return producer;
   }
 
@@ -161,13 +163,6 @@ export class MediasoupService {
     return this.routers.get(roomId).rtpCapabilities;
   }
 
-  public getRoomProducers(roomId: string) {
-    const roomProducers = this.producers.get(roomId);
-    if (!roomProducers) return [];
-    return roomProducers.map((producer) => ({
-      id: producer.id,
-    }));
-  }
   private getTransportById(roomId: string, transportId: string) {
     return this.transports
       .get(roomId)

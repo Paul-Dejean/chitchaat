@@ -1,15 +1,26 @@
 "use client";
 import { Room } from "@/services/rooms";
 import { VideoPlayer } from "../VideoPlayer";
-import { useProduceMediaStream } from "@/lib/useProduceMediaStream";
-import { useEffect, useState } from "react";
-import { mediasoupClient } from "@/services/mediasoup";
-import { consumeProducer } from "@/lib/useConsumeMediaStream";
+
+import { useContext, useEffect, useState } from "react";
+
+import { RoomContext } from "@/contexts/RoomContext";
+import { RoomClientState } from "@/lib/roomClient";
+import { useSelector } from "@/store";
 
 export function VideoBoard({ room }: { room: Room }) {
+  const roomClient = useContext(RoomContext);
+  const roomState = useSelector((state) => state.room.state);
+  useEffect(() => {
+    roomClient.reset();
+    if (roomClient.state === RoomClientState.NEW) {
+      roomClient.joinRoom(room.id);
+    }
+  }, [room.id, roomClient]);
+
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
   const [consumerStreams, setConsumerStreams] = useState<MediaStream[]>([]);
-  const [producers, setProducers] = useState<any>([]);
+
   useEffect(() => {
     async function enableStream() {
       try {
@@ -29,46 +40,26 @@ export function VideoBoard({ room }: { room: Room }) {
   }, [currentStream]);
 
   useEffect(() => {
-    setTimeout(async () => {
-      console.log({ roomId: room.id });
-      if (!room?.id) return;
-      console.log("hello");
-      const producers = await mediasoupClient.getRoomProducers(room.id);
-      console.log({ producers });
-      setProducers(producers);
+    setTimeout(() => {
+      const streams = roomClient.consumers.map(
+        (consumer) => new MediaStream([consumer.track])
+      );
+      console.log({ streams });
+      setConsumerStreams(streams);
     }, 2000);
-  }, [room.id]);
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      const consumers = await Promise.all(
-        producers.map((producer: { id: string }) =>
-          consumeProducer(room.id, producer.id)
-        )
-      );
-      const streams = consumers.map((consumer) => {
-        const stream = new MediaStream([consumer.track]);
-        return stream;
-      });
-      setConsumerStreams(streams);
-      setTimeout(
-        () =>
-          consumers.forEach((consumer) =>
-            mediasoupClient.emitMessage("resumeConsumer", {
-              roomId: room.id,
-              consumerId: consumer.id,
-            })
-          ),
-        1000
-      );
-    })();
-  }, [producers, room.id]);
+    if (!currentStream?.active) return;
+    if (roomState !== RoomClientState.CONNECTED) return;
+    console.log({ currentStream, state: roomState });
 
-  useProduceMediaStream(room.id, currentStream);
+    roomClient.createProducer(currentStream);
+  }, [currentStream, roomState]);
 
   return (
-    <div className="flex flex-col mt-4 gap-4">
-      <VideoPlayer stream={currentStream} />
+    <div className="flex  mt-4 gap-4">
+      <VideoPlayer stream={currentStream} displayControls={true} />
       {consumerStreams.map((stream) => (
         <VideoPlayer key={stream.id} stream={stream} />
       ))}
