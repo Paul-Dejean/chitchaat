@@ -7,10 +7,13 @@ type Room = {
   id: string;
   peers: Peer[];
   router: MediasoupTypes.Router;
+  producers: MediasoupTypes.Producer[];
+  consumers: MediasoupTypes.Consumer[];
 };
 
 type Peer = {
   displayName: string;
+  id: string;
 };
 @Injectable()
 export class RoomsService {
@@ -28,6 +31,8 @@ export class RoomsService {
       id: roomId,
       peers: [],
       router,
+      producers: [],
+      consumers: [],
     };
     this.rooms.push(room);
     return room;
@@ -35,6 +40,8 @@ export class RoomsService {
 
   joinRoom(roomId: string, displayName: string) {
     const room = this.getRoomById(roomId);
-    room.peers.push({ displayName });
+    const peerId = randomUUID();
+    room.peers.push({ displayName, id: peerId });
+    return { peerId };
   }
 }

@@ -9,12 +9,16 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MediasoupService } from './mediasoup.service';
+import { RoomsService } from 'src/rooms/rooms.service';
 @WebSocketGateway({ cors: '*' })
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(MediasoupGateway.name);
-  constructor(private readonly mediasoupService: MediasoupService) {}
+  constructor(
+    private readonly mediasoupService: MediasoupService,
+    private readonly roomService: RoomsService,
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -30,9 +34,10 @@ export class MediasoupGateway
   @SubscribeMessage('joinRoom')
   async joinRoom(
     @ConnectedSocket() client: Socket,
-    @Body() { roomId }: { roomId: string; displayName: string },
+    @Body() { roomId, displayName }: { roomId: string; displayName: string },
   ) {
-    // client.join(roomId);
+    await client.join(roomId);
+    return this.roomService.joinRoom(roomId, displayName);
   }
 
   @SubscribeMessage('createTransport')
@@ -53,15 +58,18 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('produce')
-  async produce(@Body() { roomId, transportId, kind, rtpParameters }) {
+  async produce(@Body() { roomId, transportId, kind, rtpParameters, peerId }) {
     const producer = await this.mediasoupService.produce(
       roomId,
       transportId,
       kind,
       rtpParameters,
+      peerId,
     );
-    this.server.emit('newPeer', { producerId: producer.id });
-    return producer.id;
+    this.server
+      .to(roomId)
+      .emit('newProducer', { producerId: producer.id, peerId });
+    return { producerId: producer.id };
   }
 
   @SubscribeMessage('consume')

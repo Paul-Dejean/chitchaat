@@ -5,9 +5,5 @@ export default function RoomLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <RoomProvider>
-      <div>{children}</div>;
-    </RoomProvider>
-  );
+  return <RoomProvider>{children}</RoomProvider>;
 }

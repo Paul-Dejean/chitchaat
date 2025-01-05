@@ -3,11 +3,13 @@
 import { Store } from "@/store";
 import { roomActions } from "@/store/slices/room";
 import {
+  AppData,
   Consumer,
   detectDevice,
   Device,
   Producer,
   RtpCapabilities,
+  Transport,
 } from "mediasoup-client/lib/types";
 import { io, Socket } from "socket.io-client";
 
@@ -22,10 +24,13 @@ export class RoomClient {
   private store: Store;
   state: RoomClientState = RoomClientState.NEW;
   private device: Device | undefined;
+  private peerId: string | undefined;
   private roomId: string | undefined;
   private socket: Socket | undefined;
+  private sendTransport: Transport<AppData> | undefined;
+  private recvTransport: Transport<AppData> | undefined;
 
-  private producer: Producer | undefined;
+  private producers: Producer[] = [];
   public consumers: Consumer[] = [];
 
   constructor() {}
@@ -36,24 +41,41 @@ export class RoomClient {
     this.roomId = undefined;
     this.socket?.disconnect();
     this.socket = undefined;
-    this.producer = undefined;
+    this.producers = [];
     this.consumers = [];
+    this.sendTransport = undefined;
+    this.recvTransport = undefined;
   }
 
   public setStore(store: Store) {
     this.store = store;
   }
 
+  public close() {
+    if (this.sendTransport) {
+      this.sendTransport.close();
+    }
+    if (this.recvTransport) {
+      this.recvTransport.close();
+    }
+    this.reset();
+  }
+
   private initSocket() {
     const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
-    socket.on("connect", () => {
-      //   this.emitMessage("joinRoom", { roomId: this.roomId });
-      this.initDevice();
+    socket.on("connect", async () => {
+      const { peerId } = (await this.emitMessage("joinRoom", {
+        roomId: this.roomId,
+      })) as { peerId: string };
+      this.peerId = peerId;
+
+      await this.initDevice();
       console.log("Connected to the server!");
     });
 
     socket.on("disconnect", () => {
+      this.close();
       console.log("Disconnected from the server!");
     });
 
@@ -61,18 +83,34 @@ export class RoomClient {
       console.error("Connection error:", error);
     });
 
-    socket.on("newPeer", async (peer: { producerId: string }) => {
-      console.log({ newPeer: peer });
-      if (
-        this.consumers.find(
-          (consumer) => consumer.producerId === peer.producerId
-        )
-      ) {
-        return;
+    socket.on(
+      "newProducer",
+      async (peer: { producerId: string; peerId: string }) => {
+        console.log({ newPeer: peer });
+        if (
+          this.consumers.find(
+            (consumer) => consumer.producerId === peer.producerId
+          )
+        ) {
+          return;
+        }
+
+        console.log("CONSUMING");
+        const consumer = await this.consume(peer.producerId);
+        console.log("dispatching addConsumer", { consumer });
+        this.store.dispatch(
+          roomActions.addConsumer({
+            consumer: {
+              id: consumer.id,
+              track: consumer.track,
+              peerId: peer.peerId,
+            },
+          })
+        );
+        console.log("RESUMING");
+        await this.resumeConsumer(consumer.id);
       }
-      const consumer = await this.consume(peer.producerId);
-      await this.resumeConsumer(consumer.id);
-    });
+    );
     return socket;
   }
 
@@ -93,6 +131,8 @@ export class RoomClient {
     this.state = RoomClientState.CONNECTED;
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTED));
     console.log("new State", this.state);
+    this.sendTransport = await this.createProducerTransport();
+    this.recvTransport = await this.createConsumerTransport();
   }
 
   private async loadDevice(routerRtpCapabilities: RtpCapabilities) {
@@ -105,22 +145,28 @@ export class RoomClient {
     }
   }
 
-  async createProducer(stream: MediaStream) {
+  async createProducer(track: MediaStreamTrack) {
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
+    if (!this.sendTransport) {
+      throw new Error("Send transport not instanciated");
+    }
 
-    const transport = await this.createProducerTransport();
-    const track = stream.getVideoTracks()[0];
     try {
-      const producer = await transport.produce({ track });
+      const producer = await this.sendTransport.produce({ track });
       console.log({ producer });
-      this.producer = producer;
+      this.producers.push(producer);
       return producer;
     } catch (error) {
       console.error("Failed to produce", error);
     }
   }
+
+  //   async closeProducer() {
+  //     await this.producer.close();
+  //     this.producer = undefined;
+  //   }
 
   private async createProducerTransport() {
     if (!this.device) {
@@ -161,8 +207,9 @@ export class RoomClient {
             transportId: producerTransport!.id,
             kind,
             rtpParameters,
+            peerId: this.peerId,
           },
-          (producerId: string) => {
+          ({ producerId }: { producerId: string }) => {
             callback({ id: producerId });
           }
         );
@@ -176,16 +223,18 @@ export class RoomClient {
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
+    if (!this.recvTransport) {
+      throw new Error("Recv transport not instanciated");
+    }
 
-    const consumerTransport = await this.createConsumerTransport();
     const { kind, rtpParameters, id } = await this.emitMessage("consume", {
       roomId: this.roomId,
       producerId,
       rtpCapabilities: this.device.rtpCapabilities,
-      consumerId: consumerTransport.id,
+      consumerId: this.recvTransport.id,
     });
 
-    const consumer = await consumerTransport.consume({
+    const consumer = await this.recvTransport.consume({
       id,
       producerId,
       kind,

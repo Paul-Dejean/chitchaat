@@ -18,7 +18,7 @@ export default function RoomPage() {
   const roomClient = useContext(RoomContext);
   roomClient.setStore(store);
   return (
-    <div className="mx-8">
+    <div className="mx-8 h-screen flex flex-col justify-start">
       <div className="pt-4 flex gap-x-4 items-center">
         <div>
           <BiLogoBaidu
@@ -33,7 +33,9 @@ export default function RoomPage() {
           {/* <p className="text-secondary text-sm">{`${today.toLocaleDateString()} ${today.toLocaleTimeString()}`}</p> */}
         </div>
       </div>
-      {room && <VideoBoard room={room}></VideoBoard>}
+      <div className="mb-8 flex-1">
+        {room && <VideoBoard room={room}></VideoBoard>}
+      </div>
     </div>
   );
 }

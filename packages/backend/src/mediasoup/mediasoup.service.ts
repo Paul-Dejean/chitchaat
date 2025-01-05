@@ -94,6 +94,7 @@ export class MediasoupService {
     transportId: string,
     kind: 'video' | 'audio',
     rtpParameters: MediasoupTypes.RtpParameters,
+    peerId: string,
   ) {
     const transport = this.getTransportById(roomId, transportId);
 
