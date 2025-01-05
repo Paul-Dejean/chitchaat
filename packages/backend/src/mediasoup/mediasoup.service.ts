@@ -160,6 +160,27 @@ export class MediasoupService {
     await consumer.resume();
   }
 
+  async pauseProducer(roomId: string, producerId: string) {
+    const producer = this.producers
+      .get(roomId)
+      .find((roomProducer) => roomProducer.id === producerId);
+    await producer.pause();
+  }
+
+  async resumeProducer(roomId: string, producerId: string) {
+    const producer = this.producers
+      .get(roomId)
+      .find((roomProducer) => roomProducer.id === producerId);
+    await producer.resume();
+  }
+
+  async closeProducer(roomId: string, producerId: string) {
+    const producer = this.producers
+      .get(roomId)
+      .find((roomProducer) => roomProducer.id === producerId);
+    await producer.close();
+  }
+
   public async getRouterRtpCapabilities(roomId: string) {
     return this.routers.get(roomId).rtpCapabilities;
   }

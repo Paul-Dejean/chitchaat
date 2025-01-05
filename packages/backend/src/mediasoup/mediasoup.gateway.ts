@@ -8,8 +8,8 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MediasoupService } from './mediasoup.service';
 import { RoomsService } from 'src/rooms/rooms.service';
+import { MediasoupService } from './mediasoup.service';
 @WebSocketGateway({ cors: '*' })
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -85,6 +85,27 @@ export class MediasoupGateway
       rtpParameters: consumer.rtpParameters,
       id: consumer.id,
     };
+  }
+
+  @SubscribeMessage('resumeProducer')
+  async resumeProducer(
+    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+  ) {
+    await this.mediasoupService.resumeProducer(roomId, producerId);
+  }
+
+  @SubscribeMessage('pauseProducer')
+  async pauseProducer(
+    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+  ) {
+    await this.mediasoupService.pauseProducer(roomId, producerId);
+  }
+
+  @SubscribeMessage('closeProducer')
+  async closeProducer(
+    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+  ) {
+    await this.mediasoupService.closeProducer(roomId, producerId);
   }
 
   @SubscribeMessage('resumeConsumer')

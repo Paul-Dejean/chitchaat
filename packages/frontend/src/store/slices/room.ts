@@ -8,6 +8,7 @@ export const roomSlice = createSlice({
     state: RoomClientState.NEW,
     isVideoEnabled: false,
     isAudioEnabled: false,
+    isScreenSharingEnabled: false,
     consumers: [] as Consumer[],
   },
   reducers: {
@@ -31,6 +32,20 @@ export const roomSlice = createSlice({
       }
       state.isAudioEnabled = action.payload.shouldEnableAudio;
     },
+    toggleScreenSharing: (
+      state,
+      action: PayloadAction<{ shouldEnableScreenSharing: boolean }>
+    ) => {
+      console.log(action);
+      if (
+        action.payload.shouldEnableScreenSharing ===
+        state.isScreenSharingEnabled
+      ) {
+        return;
+      }
+      state.isScreenSharingEnabled = action.payload.shouldEnableScreenSharing;
+    },
+
     addConsumer: (
       state,
       action: PayloadAction<{ consumer: Consumer & { peerId: string } }>

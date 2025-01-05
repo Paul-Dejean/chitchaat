@@ -30,7 +30,9 @@ export class RoomClient {
   private sendTransport: Transport<AppData> | undefined;
   private recvTransport: Transport<AppData> | undefined;
 
-  private producers: Producer[] = [];
+  private microphoneProducer: Producer | undefined;
+  private videoProducer: Producer | undefined;
+  private desktopProducer: Producer | undefined;
   public consumers: Consumer[] = [];
 
   constructor() {}
@@ -41,7 +43,7 @@ export class RoomClient {
     this.roomId = undefined;
     this.socket?.disconnect();
     this.socket = undefined;
-    this.producers = [];
+
     this.consumers = [];
     this.sendTransport = undefined;
     this.recvTransport = undefined;
@@ -145,7 +147,85 @@ export class RoomClient {
     }
   }
 
-  async createProducer(track: MediaStreamTrack) {
+  async enableWebcam() {
+    if (this.desktopProducer) {
+      await this.disableDesktopSharing();
+    }
+    if (this.videoProducer) {
+      await this.socket?.emit("resumeProducer", {
+        roomId: this.roomId,
+        producerId: this.videoProducer.id,
+      });
+    } else {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const track = stream.getVideoTracks()[0];
+      this.videoProducer = await this.createProducer(track);
+    }
+  }
+
+  async disableWebcam() {
+    if (this.videoProducer) {
+      await this.socket?.emit("closeProducer", {
+        roomId: this.roomId,
+        producerId: this.videoProducer.id,
+      });
+      this.videoProducer.close();
+      this.videoProducer = undefined;
+    }
+  }
+
+  async enableScreenSharing() {
+    if (this.videoProducer) {
+      await this.disableWebcam();
+    }
+    if (this.desktopProducer) {
+      await this.socket?.emit("resumeProducer", {
+        roomId: this.roomId,
+        producerId: this.desktopProducer.id,
+      });
+    } else {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
+      const track = stream.getVideoTracks()[0];
+      this.desktopProducer = await this.createProducer(track);
+    }
+  }
+
+  async disableScreenSharing() {
+    if (this.desktopProducer) {
+      await this.socket?.emit("closeProducer", {
+        roomId: this.roomId,
+        producerId: this.desktopProducer.id,
+      });
+      this.desktopProducer.close();
+      this.desktopProducer = undefined;
+    }
+  }
+
+  async enableMicrophone() {
+    if (this.microphoneProducer) {
+      await this.socket?.emit("resumeProducer", {
+        roomId: this.roomId,
+        producerId: this.microphoneProducer.id,
+      });
+    } else {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const track = stream.getAudioTracks()[0];
+      this.microphoneProducer = await this.createProducer(track);
+    }
+  }
+
+  async disableMicrophone() {
+    if (this.microphoneProducer) {
+      await this.socket?.emit("pauseProducer", {
+        roomId: this.roomId,
+        producerId: this.microphoneProducer.id,
+      });
+    }
+  }
+
+  private async createProducer(track: MediaStreamTrack) {
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
@@ -156,7 +236,7 @@ export class RoomClient {
     try {
       const producer = await this.sendTransport.produce({ track });
       console.log({ producer });
-      this.producers.push(producer);
+
       return producer;
     } catch (error) {
       console.error("Failed to produce", error);

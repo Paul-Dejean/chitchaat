@@ -69,13 +69,14 @@ export function VideoBoard({ room }: { room: Room }) {
         console.log({ stream });
         const track = stream.getVideoTracks()[0];
         setCurrentTrack(track);
-        await roomClient.createProducer(track);
+        await roomClient.enableWebcam();
         dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       setCurrentTrack(null);
+      await roomClient.disableWebcam();
       dispatch(roomActions.toggleVideo({ shouldEnableVideo: false }));
     }
   }
@@ -85,19 +86,41 @@ export function VideoBoard({ room }: { room: Room }) {
     console.log(roomState);
     if (!roomState.isAudioEnabled) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-
-        const track = stream.getAudioTracks()[0];
-
-        await roomClient.createProducer(track);
+        await roomClient.enableMicrophone();
         dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
+      await roomClient.disableMicrophone();
       dispatch(roomActions.toggleAudio({ shouldEnableAudio: false }));
+    }
+  }
+
+  async function onToggleShareDesktopClick() {
+    console.log("toggle");
+    console.log(roomState);
+    if (!roomState.isScreenSharingEnabled) {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        });
+        console.log({ stream });
+        const track = stream.getVideoTracks()[0];
+        setCurrentTrack(track);
+        await roomClient.enableScreenSharing();
+        dispatch(
+          roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
+        );
+      } catch (err) {
+        console.error("Failed to get the stream", err);
+      }
+    } else {
+      setCurrentTrack(null);
+      await roomClient.disableScreenSharing();
+      dispatch(
+        roomActions.toggleScreenSharing({ shouldEnableScreenSharing: false })
+      );
     }
   }
 
@@ -134,7 +157,9 @@ export function VideoBoard({ room }: { room: Room }) {
         <IconButton
           icon={<TbDeviceDesktopShare size={20} />}
           aria-label="Share Desktop"
-          onClick={() => {}}
+          onClick={() => {
+            onToggleShareDesktopClick();
+          }}
         />
         <IconButton
           icon={<IoChatbubbleEllipsesOutline size={20} />}
