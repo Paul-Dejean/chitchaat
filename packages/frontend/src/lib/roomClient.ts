@@ -69,9 +69,10 @@ export class RoomClient {
     const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
     socket.on("connect", async () => {
-      const { peerId } = (await this.emitMessage("joinRoom", {
+      const { peerId, room } = (await this.emitMessage("joinRoom", {
         roomId: this.roomId,
       })) as { peerId: string };
+      console.log({ room });
       this.peerId = peerId;
 
       await this.initDevice();
@@ -115,6 +116,15 @@ export class RoomClient {
         await this.resumeConsumer(consumer.id);
       }
     );
+    socket.on("consumerClosed", ({ consumerId }) => {
+      console.log("consumerClosed", { consumerId });
+      const consumer = this.consumers.find(
+        (consumer) => consumer.id === consumerId
+      );
+      consumer?.close();
+      console.log(this.consumers);
+      this.store.dispatch(roomActions.removeConsumer({ consumerId }));
+    });
     return socket;
   }
 
@@ -173,11 +183,12 @@ export class RoomClient {
 
   async disableWebcam() {
     if (this.videoProducer) {
+      this.videoProducer.close();
       await this.socket?.emit("closeProducer", {
         roomId: this.roomId,
         producerId: this.videoProducer.id,
       });
-      this.videoProducer.close();
+
       this.videoProducer = undefined;
     }
   }
@@ -197,16 +208,19 @@ export class RoomClient {
       });
       const track = stream.getVideoTracks()[0];
       this.desktopProducer = await this.createProducer(track);
+      this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
+      return track;
     }
   }
 
   async disableScreenSharing() {
     if (this.desktopProducer) {
+      this.desktopProducer.close();
       await this.socket?.emit("closeProducer", {
         roomId: this.roomId,
         producerId: this.desktopProducer.id,
       });
-      this.desktopProducer.close();
+
       this.desktopProducer = undefined;
     }
   }

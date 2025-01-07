@@ -25,6 +25,7 @@ export function VideoBoard({ room }: { room: Room }) {
   const roomClient = useContext(RoomContext);
   const roomState = useSelector((state) => state.room);
   const consumers = useSelector((state) => state.room.consumers);
+  console.log({ consumers });
 
   const peerIds = [...new Set(consumers.map((consumer) => consumer.peerId))];
   console.log(peerIds);
@@ -69,6 +70,9 @@ export function VideoBoard({ room }: { room: Room }) {
         console.error("Failed to get the stream", err);
       }
     } else {
+      console.log({ currentTrack });
+      currentTrack?.stop();
+      console.log({ currentTrack });
       setCurrentTrack(null);
       await roomClient.disableWebcam();
       dispatch(roomActions.toggleVideo({ shouldEnableVideo: false }));
@@ -96,13 +100,11 @@ export function VideoBoard({ room }: { room: Room }) {
     console.log(roomState);
     if (!roomState.isScreenSharingEnabled) {
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
-        console.log({ stream });
-        const track = stream.getVideoTracks()[0];
-        setCurrentTrack(track);
-        await roomClient.enableScreenSharing();
+        const track = await roomClient.enableScreenSharing();
+        if (track) {
+          setCurrentTrack(track);
+        }
+
         dispatch(
           roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
         );
@@ -131,13 +133,13 @@ export function VideoBoard({ room }: { room: Room }) {
         <IconButton
           icon={
             roomState.isAudioEnabled ? (
-              <BiMicrophoneOff size={20} />
-            ) : (
               <BiMicrophone size={20} />
+            ) : (
+              <BiMicrophoneOff size={20} />
             )
           }
           aria-label="Toggle Microphone"
-          className={`${roomState.isAudioEnabled && "bg-red-500"}`}
+          className={`${!roomState.isAudioEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleAudioClick();
           }}
@@ -145,13 +147,13 @@ export function VideoBoard({ room }: { room: Room }) {
         <IconButton
           icon={
             roomState.isVideoEnabled ? (
-              <IoVideocamOffOutline size={20} />
-            ) : (
               <IoVideocamOutline size={20} />
+            ) : (
+              <IoVideocamOffOutline size={20} />
             )
           }
           aria-label="Toggle Video"
-          className={`${roomState.isVideoEnabled && "bg-red-500"}`}
+          className={`${!roomState.isVideoEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleVideoClick();
           }}
@@ -167,7 +169,7 @@ export function VideoBoard({ room }: { room: Room }) {
         <IconButton
           icon={<TbDeviceDesktopShare size={20} />}
           aria-label="Share Desktop"
-          className={`${roomState.isScreenSharingEnabled && "bg-red-500"}`}
+          className={`${!roomState.isScreenSharingEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleShareDesktopClick();
           }}

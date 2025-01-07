@@ -55,6 +55,12 @@ export const roomSlice = createSlice({
       console.log(action);
       state.consumers.push(action.payload.consumer);
     },
+    removeConsumer: (state, action: PayloadAction<{ consumerId: string }>) => {
+      console.log(action);
+      state.consumers = state.consumers.filter(
+        (consumer) => consumer.id !== action.payload.consumerId
+      );
+    },
     updateState: (state, action: PayloadAction<RoomClientState>) => {
       state.state = action.payload;
     },

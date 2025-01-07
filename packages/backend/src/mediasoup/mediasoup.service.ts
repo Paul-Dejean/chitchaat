@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { createWorker, types as MediasoupTypes } from 'mediasoup';
+import { RoomsService } from 'src/rooms/rooms.service';
 
 @Injectable()
 export class MediasoupService {
   private worker: MediasoupTypes.Worker;
 
-  private transports: Map<string, MediasoupTypes.WebRtcTransport[]> = new Map();
-  private producers: Map<string, MediasoupTypes.Producer[]> = new Map();
-  private consumers: Map<string, MediasoupTypes.Consumer[]> = new Map();
-  private routers: Map<string, MediasoupTypes.Router> = new Map();
-
-  constructor() {
+  constructor(private roomsService: RoomsService) {
     this.initMediasoup();
   }
 
@@ -28,7 +24,7 @@ export class MediasoupService {
     });
   }
 
-  async createRouter(roomId: string) {
+  async createRouter() {
     const mediaCodecs: MediasoupTypes.RtpCodecCapability[] = [
       {
         kind: 'audio',
@@ -46,7 +42,6 @@ export class MediasoupService {
       },
     ];
     const router = await this.worker.createRouter({ mediaCodecs });
-    this.routers.set(roomId, router);
     return router;
   }
   async createWebRtcTransport(roomId: string) {
@@ -55,10 +50,9 @@ export class MediasoupService {
       initialAvailableOutgoingBitrate: 1000000,
     };
 
-    const router = this.routers.get(roomId);
-    console.log(this.routers);
+    const room = await this.roomsService.getRoomById(roomId);
 
-    const transport = await router.createWebRtcTransport({
+    const transport = await room.router.createWebRtcTransport({
       listenIps,
       enableUdp: true,
       enableTcp: true,
@@ -66,11 +60,7 @@ export class MediasoupService {
       initialAvailableOutgoingBitrate,
     });
 
-    if (!this.transports.has(roomId)) {
-      this.transports.set(roomId, []);
-    }
-
-    this.transports.get(roomId).push(transport);
+    this.roomsService.addTransport(roomId, transport);
     return transport;
   }
 
@@ -79,7 +69,10 @@ export class MediasoupService {
     transportId: string,
     dtlsParameters: MediasoupTypes.DtlsParameters,
   ) {
-    const transport = this.getTransportById(roomId, transportId);
+    const transport = await this.roomsService.getTransportById(
+      roomId,
+      transportId,
+    );
 
     if (!transport) {
       throw new Error('Transport not found');
@@ -94,9 +87,11 @@ export class MediasoupService {
     transportId: string,
     kind: 'video' | 'audio',
     rtpParameters: MediasoupTypes.RtpParameters,
-    peerId: string,
   ) {
-    const transport = this.getTransportById(roomId, transportId);
+    const transport = await this.roomsService.getTransportById(
+      roomId,
+      transportId,
+    );
 
     if (!transport) {
       throw new Error('Transport not found');
@@ -107,13 +102,7 @@ export class MediasoupService {
       rtpParameters,
     });
 
-    if (!this.producers.has(roomId)) {
-      this.producers.set(roomId, []);
-    }
-
-    this.producers.get(roomId).push(producer);
-
-    console.log({ producers: this.producers });
+    this.roomsService.addProducer(roomId, producer);
 
     return producer;
   }
@@ -124,13 +113,18 @@ export class MediasoupService {
     producerId: string,
     rtpCapabilities: MediasoupTypes.RtpCapabilities,
   ) {
-    const consumerTransport = this.getTransportById(roomId, consumerId);
+    const consumerTransport = await this.roomsService.getTransportById(
+      roomId,
+      consumerId,
+    );
 
     if (!consumerTransport) {
       throw new Error('Transport not found');
     }
 
-    if (!this.routers.get(roomId).canConsume({ producerId, rtpCapabilities })) {
+    const room = await this.roomsService.getRoomById(roomId);
+
+    if (!room.router.canConsume({ producerId, rtpCapabilities })) {
       throw new Error('Cannot consume');
     }
 
@@ -141,11 +135,7 @@ export class MediasoupService {
         paused: true, // Start in paused state, resume after transport connect
       });
 
-      if (!this.consumers.has(roomId)) {
-        this.consumers.set(roomId, []);
-      }
-
-      this.consumers.get(roomId).push(consumer);
+      this.roomsService.addConsumer(roomId, consumer);
 
       return consumer;
     } catch (error) {
@@ -154,40 +144,38 @@ export class MediasoupService {
   }
 
   async resumeConsumer(roomId: string, consumerId: string) {
-    const consumer = this.consumers
-      .get(roomId)
-      .find((roomConsumer) => roomConsumer.id === consumerId);
+    const room = await this.roomsService.getRoomById(roomId);
+    const consumer = room.consumers.find(
+      (roomConsumer) => roomConsumer.id === consumerId,
+    );
     await consumer.resume();
   }
 
   async pauseProducer(roomId: string, producerId: string) {
-    const producer = this.producers
-      .get(roomId)
-      .find((roomProducer) => roomProducer.id === producerId);
+    const room = this.roomsService.getRoomById(roomId);
+    const producer = room.producers.find(
+      (roomProducer) => roomProducer.id === producerId,
+    );
     await producer.pause();
   }
 
   async resumeProducer(roomId: string, producerId: string) {
-    const producer = this.producers
-      .get(roomId)
-      .find((roomProducer) => roomProducer.id === producerId);
+    const room = this.roomsService.getRoomById(roomId);
+    const producer = room.producers.find(
+      (roomProducer) => roomProducer.id === producerId,
+    );
     await producer.resume();
   }
 
   async closeProducer(roomId: string, producerId: string) {
-    const producer = this.producers
-      .get(roomId)
-      .find((roomProducer) => roomProducer.id === producerId);
+    const room = this.roomsService.getRoomById(roomId);
+    const producer = room.producers.find(
+      (roomProducer) => roomProducer.id === producerId,
+    );
     await producer.close();
   }
-
   public async getRouterRtpCapabilities(roomId: string) {
-    return this.routers.get(roomId).rtpCapabilities;
-  }
-
-  private getTransportById(roomId: string, transportId: string) {
-    return this.transports
-      .get(roomId)
-      .find((transport) => transport.id === transportId);
+    const room = await this.roomsService.getRoomById(roomId);
+    return room.router.rtpCapabilities;
   }
 }

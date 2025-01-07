@@ -1,9 +1,14 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
+import { MediasoupService } from 'src/mediasoup/mediasoup.service';
+import { randomUUID } from 'crypto';
 
 @Controller('rooms')
 export class RoomsController {
-  constructor(private roomsService: RoomsService) {}
+  constructor(
+    private roomsService: RoomsService,
+    private mediasoupService: MediasoupService,
+  ) {}
 
   @Get(':roomId')
   async getRoomById(@Param('roomId') roomId: string) {
@@ -11,6 +16,8 @@ export class RoomsController {
   }
   @Post()
   async createRoom() {
-    return this.roomsService.createRoom();
+    const roomId = randomUUID();
+    const router = await this.mediasoupService.createRouter();
+    return this.roomsService.createRoom(roomId, router);
   }
 }

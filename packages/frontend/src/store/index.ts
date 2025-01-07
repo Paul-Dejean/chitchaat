@@ -13,6 +13,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ["room/addConsumer"],
+        ignoredPaths: ["room.consumers"], // Ensures all `track` objects in any consumer are ignored
       },
     }),
 });

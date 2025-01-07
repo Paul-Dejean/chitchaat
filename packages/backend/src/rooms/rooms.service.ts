@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { types as MediasoupTypes } from 'mediasoup';
-import { MediasoupService } from 'src/mediasoup/mediasoup.service';
 
 type Room = {
   id: string;
@@ -9,6 +8,7 @@ type Room = {
   router: MediasoupTypes.Router;
   producers: MediasoupTypes.Producer[];
   consumers: MediasoupTypes.Consumer[];
+  transports: MediasoupTypes.Transport[];
 };
 
 type Peer = {
@@ -18,21 +18,20 @@ type Peer = {
 @Injectable()
 export class RoomsService {
   rooms: Room[] = [];
-  constructor(private mediasoupService: MediasoupService) {}
+  constructor() {}
 
   getRoomById(roomId: string) {
     return this.rooms.find((room) => room.id === roomId);
   }
 
-  async createRoom() {
-    const roomId = randomUUID();
-    const router = await this.mediasoupService.createRouter(roomId);
+  async createRoom(roomId: string, router: MediasoupTypes.Router) {
     const room = {
       id: roomId,
-      peers: [],
       router,
+      peers: [],
       producers: [],
       consumers: [],
+      transports: [],
     };
     this.rooms.push(room);
     return room;
@@ -42,6 +41,39 @@ export class RoomsService {
     const room = this.getRoomById(roomId);
     const peerId = randomUUID();
     room.peers.push({ displayName, id: peerId });
-    return { peerId };
+    return { peerId, room };
+  }
+
+  getTransportById(roomId: string, transportId: string) {
+    const room = this.getRoomById(roomId);
+    return room.transports.find((transport) => transport.id === transportId);
+  }
+
+  addTransport(roomId: string, transport: MediasoupTypes.Transport) {
+    const room = this.getRoomById(roomId);
+    room.transports.push(transport);
+    return transport;
+  }
+
+  getProducerById(roomId: string, producerId: string) {
+    const room = this.getRoomById(roomId);
+    return room.producers.find((producer) => producer.id === producerId);
+  }
+
+  addProducer(roomId: string, producer: MediasoupTypes.Producer) {
+    const room = this.getRoomById(roomId);
+    room.producers.push(producer);
+    return producer;
+  }
+
+  getConsumerById(roomId: string, consumerId: string) {
+    const room = this.getRoomById(roomId);
+    return room.consumers.find((consumer) => consumer.id === consumerId);
+  }
+
+  addConsumer(roomId: string, consumer: MediasoupTypes.Consumer) {
+    const room = this.getRoomById(roomId);
+    room.consumers.push(consumer);
+    return consumer;
   }
 }

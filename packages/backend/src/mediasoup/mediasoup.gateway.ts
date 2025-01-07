@@ -64,7 +64,6 @@ export class MediasoupGateway
       transportId,
       kind,
       rtpParameters,
-      peerId,
     );
     this.server
       .to(roomId)
@@ -80,6 +79,11 @@ export class MediasoupGateway
       producerId,
       rtpCapabilities,
     );
+    consumer.on('producerclose', () => {
+      this.server
+        .to(roomId)
+        .emit('consumerClosed', { consumerId: consumer.id });
+    });
     return {
       kind: consumer.kind,
       rtpParameters: consumer.rtpParameters,
