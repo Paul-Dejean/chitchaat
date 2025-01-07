@@ -2,15 +2,16 @@
 import { Room } from "@/services/rooms";
 import { Peer } from "../Peer";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 
 import { RoomContext } from "@/contexts/RoomContext";
-import { RoomClientState } from "@/lib/roomClient";
+
 import { useDispatch, useSelector } from "@/store";
 import { GrMicrophone } from "react-icons/gr";
 import {
-  IoVideocamOutline,
   IoChatbubbleEllipsesOutline,
+  IoVideocamOffOutline,
+  IoVideocamOutline,
 } from "react-icons/io5";
 import { TbDeviceDesktopShare } from "react-icons/tb";
 import { Button } from "../ui-library/Button";
@@ -18,6 +19,7 @@ import { IconButton } from "../ui-library/IconButton";
 
 import { roomActions } from "@/store/slices/room";
 import { useRouter } from "next/navigation";
+import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 export function VideoBoard({ room }: { room: Room }) {
   const roomClient = useContext(RoomContext);
@@ -42,12 +44,6 @@ export function VideoBoard({ room }: { room: Room }) {
 
   const dispatch = useDispatch();
   const router = useRouter();
-  useEffect(() => {
-    roomClient.reset();
-    if (roomClient.state === RoomClientState.NEW) {
-      roomClient.joinRoom(room.id);
-    }
-  }, [room.id, roomClient]);
 
   const [currentTrack, setCurrentTrack] = useState<MediaStreamTrack | null>(
     null
@@ -59,8 +55,6 @@ export function VideoBoard({ room }: { room: Room }) {
   }
 
   async function onToggleVideoClick() {
-    console.log("toggle");
-    console.log(roomState);
     if (!roomState.isVideoEnabled) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -126,22 +120,38 @@ export function VideoBoard({ room }: { room: Room }) {
 
   return (
     <div className="flex flex-col h-full mt-4 gap-4">
-      <Peer videoTrack={currentTrack} />
-      {consumerPerPeer.map(({ audioTrack, videoTrack, peerId }) => (
-        <Peer key={peerId} audioTrack={audioTrack} videoTrack={videoTrack} />
-      ))}
+      <div className="flex gap-x-4 flex-1">
+        <Peer videoTrack={currentTrack} />
+        {consumerPerPeer.map(({ audioTrack, videoTrack, peerId }) => (
+          <Peer key={peerId} audioTrack={audioTrack} videoTrack={videoTrack} />
+        ))}
+      </div>
 
       <div className="p-4 flex gap-x-2 justify-center w-full">
         <IconButton
-          icon={<GrMicrophone size={20} />}
+          icon={
+            roomState.isAudioEnabled ? (
+              <BiMicrophoneOff size={20} />
+            ) : (
+              <BiMicrophone size={20} />
+            )
+          }
           aria-label="Toggle Microphone"
+          className={`${roomState.isAudioEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleAudioClick();
           }}
         />
         <IconButton
-          icon={<IoVideocamOutline size={20} />}
+          icon={
+            roomState.isVideoEnabled ? (
+              <IoVideocamOffOutline size={20} />
+            ) : (
+              <IoVideocamOutline size={20} />
+            )
+          }
           aria-label="Toggle Video"
+          className={`${roomState.isVideoEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleVideoClick();
           }}
@@ -157,6 +167,7 @@ export function VideoBoard({ room }: { room: Room }) {
         <IconButton
           icon={<TbDeviceDesktopShare size={20} />}
           aria-label="Share Desktop"
+          className={`${roomState.isScreenSharingEnabled && "bg-red-500"}`}
           onClick={() => {
             onToggleShareDesktopClick();
           }}

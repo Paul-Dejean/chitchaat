@@ -2,15 +2,17 @@ import { RoomClientState } from "@/lib/roomClient";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Consumer } from "mediasoup-client/lib/types";
 
+const initialState = {
+  state: RoomClientState.NEW,
+  isVideoEnabled: false,
+  isAudioEnabled: false,
+  isScreenSharingEnabled: false,
+  consumers: [] as Consumer[],
+};
+
 export const roomSlice = createSlice({
   name: "room",
-  initialState: {
-    state: RoomClientState.NEW,
-    isVideoEnabled: false,
-    isAudioEnabled: false,
-    isScreenSharingEnabled: false,
-    consumers: [] as Consumer[],
-  },
+  initialState,
   reducers: {
     toggleVideo: (
       state,
@@ -55,6 +57,13 @@ export const roomSlice = createSlice({
     },
     updateState: (state, action: PayloadAction<RoomClientState>) => {
       state.state = action.payload;
+    },
+    leaveRoom: (state) => {
+      state.state = RoomClientState.NEW;
+      state.isAudioEnabled = false;
+      state.isVideoEnabled = false;
+      state.isScreenSharingEnabled = false;
+      state.consumers = [];
     },
   },
 });

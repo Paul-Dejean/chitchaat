@@ -9,6 +9,12 @@ export const store = configureStore({
   reducer: {
     room: roomsReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ["room/addConsumer"],
+      },
+    }),
 });
 
 export type Store = typeof store;

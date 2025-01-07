@@ -35,7 +35,9 @@ export class RoomClient {
   private desktopProducer: Producer | undefined;
   public consumers: Consumer[] = [];
 
-  constructor() {}
+  constructor({ store }: { store: Store }) {
+    this.store = store;
+  }
 
   reset() {
     this.state = RoomClientState.NEW;
@@ -123,6 +125,12 @@ export class RoomClient {
     this.socket = this.initSocket();
   }
 
+  leaveRoom() {
+    this.socket?.disconnect();
+    this.close();
+    this.store.dispatch(roomActions.leaveRoom());
+  }
+
   private async initDevice() {
     const handlerName = detectDevice();
     this.device = new Device({ handlerName });
@@ -149,7 +157,7 @@ export class RoomClient {
 
   async enableWebcam() {
     if (this.desktopProducer) {
-      await this.disableDesktopSharing();
+      await this.disableScreenSharing();
     }
     if (this.videoProducer) {
       await this.socket?.emit("resumeProducer", {

@@ -21,7 +21,7 @@ export type Room = {
     displayName: string;
   }[];
 };
-export async function getRoomById(roomId: string): Promise<Room | undefined> {
+export async function getRoomById(roomId: string): Promise<Room | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const url = `${baseUrl}/rooms/${roomId}`;
@@ -29,5 +29,6 @@ export async function getRoomById(roomId: string): Promise<Room | undefined> {
     return response.json();
   } catch (error) {
     console.error("Failed to get room", error);
+    return null;
   }
 }
