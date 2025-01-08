@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui-library/Button";
+import { Button } from "@/ui-library/Button";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createRoom } from "@/services/rooms";

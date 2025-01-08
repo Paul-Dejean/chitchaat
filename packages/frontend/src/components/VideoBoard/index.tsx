@@ -7,24 +7,27 @@ import { useContext, useState } from "react";
 import { RoomContext } from "@/contexts/RoomContext";
 
 import { useDispatch, useSelector } from "@/store";
-import { GrMicrophone } from "react-icons/gr";
+
 import {
   IoChatbubbleEllipsesOutline,
   IoVideocamOffOutline,
   IoVideocamOutline,
 } from "react-icons/io5";
 import { TbDeviceDesktopShare } from "react-icons/tb";
-import { Button } from "../ui-library/Button";
-import { IconButton } from "../ui-library/IconButton";
+import { Button } from "../../ui-library/Button";
+import { IconButton } from "../../ui-library/IconButton";
 
 import { roomActions } from "@/store/slices/room";
 import { useRouter } from "next/navigation";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
+import { Chat } from "../Chat";
+
 export function VideoBoard({ room }: { room: Room }) {
   const roomClient = useContext(RoomContext);
   const roomState = useSelector((state) => state.room);
   const consumers = useSelector((state) => state.room.consumers);
+  const isChatOpen = useSelector((state) => state.room.isChatOpen);
   console.log({ consumers });
 
   const peerIds = [...new Set(consumers.map((consumer) => consumer.peerId))];
@@ -42,6 +45,7 @@ export function VideoBoard({ room }: { room: Room }) {
   }));
 
   console.log(consumerPerPeer);
+  console.log({ isChatOpen });
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -120,6 +124,14 @@ export function VideoBoard({ room }: { room: Room }) {
     }
   }
 
+  function onToggleChatClick() {
+    if (!roomState.isChatOpen) {
+      dispatch(roomActions.toggleChat({ shouldOpenChat: true }));
+    } else {
+      dispatch(roomActions.toggleChat({ shouldOpenChat: false }));
+    }
+  }
+
   return (
     <div className="flex flex-col h-full mt-4 gap-4">
       <div className="flex gap-x-4 flex-1">
@@ -127,6 +139,7 @@ export function VideoBoard({ room }: { room: Room }) {
         {consumerPerPeer.map(({ audioTrack, videoTrack, peerId }) => (
           <Peer key={peerId} audioTrack={audioTrack} videoTrack={videoTrack} />
         ))}
+        <Chat isOpen={isChatOpen} />
       </div>
 
       <div className="p-4 flex gap-x-2 justify-center w-full">
@@ -176,8 +189,11 @@ export function VideoBoard({ room }: { room: Room }) {
         />
         <IconButton
           icon={<IoChatbubbleEllipsesOutline size={20} />}
+          className={`${!roomState.isChatOpen && "bg-red-500"}`}
           aria-label="Toggle Chat"
-          onClick={() => {}}
+          onClick={() => {
+            onToggleChatClick();
+          }}
         />
       </div>
     </div>

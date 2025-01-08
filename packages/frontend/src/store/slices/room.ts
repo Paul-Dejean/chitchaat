@@ -7,6 +7,7 @@ const initialState = {
   isVideoEnabled: false,
   isAudioEnabled: false,
   isScreenSharingEnabled: false,
+  isChatOpen: false,
   consumers: [] as Consumer[],
 };
 
@@ -46,6 +47,13 @@ export const roomSlice = createSlice({
         return;
       }
       state.isScreenSharingEnabled = action.payload.shouldEnableScreenSharing;
+    },
+
+    toggleChat: (state, action: PayloadAction<{ shouldOpenChat: boolean }>) => {
+      if (action.payload.shouldOpenChat === state.isChatOpen) {
+        return;
+      }
+      state.isChatOpen = action.payload.shouldOpenChat;
     },
 
     addConsumer: (
