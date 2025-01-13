@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
 import { types as MediasoupTypes } from 'mediasoup';
 
 type Room = {
   id: string;
   peers: Peer[];
   router: MediasoupTypes.Router;
-  producers: MediasoupTypes.Producer[];
-  consumers: MediasoupTypes.Consumer[];
-  transports: MediasoupTypes.Transport[];
+  producers: Map<string, MediasoupTypes.Producer>;
+  consumers: Map<string, MediasoupTypes.Consumer>;
+  transports: Map<string, MediasoupTypes.Transport>;
 };
 
 type Peer = {
   displayName: string;
   id: string;
+  producers: MediasoupTypes.Producer[];
+  consumers: MediasoupTypes.Consumer[];
+  transports: MediasoupTypes.Transport[];
 };
 @Injectable()
 export class RoomsService {
@@ -29,51 +31,76 @@ export class RoomsService {
       id: roomId,
       router,
       peers: [],
-      producers: [],
-      consumers: [],
-      transports: [],
+      producers: new Map(),
+      consumers: new Map(),
+      transports: new Map(),
     };
     this.rooms.push(room);
     return room;
   }
 
-  joinRoom(roomId: string, displayName: string) {
+  joinRoom(roomId: string, newPeer: { displayName: string; id: string }) {
     const room = this.getRoomById(roomId);
-    const peerId = randomUUID();
-    room.peers.push({ displayName, id: peerId });
-    return { peerId, room };
+    room.peers.push({
+      ...newPeer,
+      producers: [],
+      consumers: [],
+      transports: [],
+    });
+    return room;
   }
 
   getTransportById(roomId: string, transportId: string) {
     const room = this.getRoomById(roomId);
-    return room.transports.find((transport) => transport.id === transportId);
+    return room.transports.get(transportId);
   }
 
-  addTransport(roomId: string, transport: MediasoupTypes.Transport) {
+  addTransport(
+    roomId: string,
+    peerId: string,
+    transport: MediasoupTypes.Transport,
+  ) {
     const room = this.getRoomById(roomId);
-    room.transports.push(transport);
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.transports.push(transport);
+    room.transports.set(transport.id, transport);
+    console.log({ room });
     return transport;
   }
 
   getProducerById(roomId: string, producerId: string) {
     const room = this.getRoomById(roomId);
-    return room.producers.find((producer) => producer.id === producerId);
+    return room.producers.get(producerId);
   }
 
-  addProducer(roomId: string, producer: MediasoupTypes.Producer) {
+  addProducer(
+    roomId: string,
+    peerId: string,
+    producer: MediasoupTypes.Producer,
+  ) {
     const room = this.getRoomById(roomId);
-    room.producers.push(producer);
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.producers.push({ ...producer, id: producer.id });
+    room.producers.set(producer.id, producer);
+    console.log('added producer', { room });
     return producer;
   }
 
   getConsumerById(roomId: string, consumerId: string) {
     const room = this.getRoomById(roomId);
-    return room.consumers.find((consumer) => consumer.id === consumerId);
+    return room.consumers.get(consumerId);
   }
 
-  addConsumer(roomId: string, consumer: MediasoupTypes.Consumer) {
+  addConsumer(
+    roomId: string,
+    peerId: string,
+    consumer: MediasoupTypes.Consumer,
+  ) {
     const room = this.getRoomById(roomId);
-    room.consumers.push(consumer);
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.consumers.push(consumer);
+    room.consumers.set(consumer.id, consumer);
+    console.log({ room });
     return consumer;
   }
 }

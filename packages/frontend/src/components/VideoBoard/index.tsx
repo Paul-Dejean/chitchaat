@@ -1,10 +1,9 @@
 "use client";
-import { Room } from "@/services/rooms";
 import { Peer } from "../Peer";
 
-import { useContext, useState } from "react";
+import { useState } from "react";
 
-import { RoomContext } from "@/contexts/RoomContext";
+import { useRoomClient } from "@/contexts/RoomContext";
 
 import { useDispatch, useSelector } from "@/store";
 
@@ -23,8 +22,9 @@ import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 import { Chat } from "../Chat";
 
-export function VideoBoard({ room }: { room: Room }) {
-  const roomClient = useContext(RoomContext);
+export function VideoBoard() {
+  const roomClient = useRoomClient();
+  console.log({ roomClient });
   const roomState = useSelector((state) => state.room);
   const consumers = useSelector((state) => state.room.consumers);
   const isChatOpen = useSelector((state) => state.room.isChatOpen);

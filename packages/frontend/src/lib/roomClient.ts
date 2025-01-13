@@ -24,7 +24,6 @@ export class RoomClient {
   private store: Store;
   state: RoomClientState = RoomClientState.NEW;
   private device: Device | undefined;
-  private peerId: string | undefined;
   private roomId: string | undefined;
   private socket: Socket | undefined;
   private sendTransport: Transport<AppData> | undefined;
@@ -39,7 +38,11 @@ export class RoomClient {
     this.store = store;
   }
 
-  reset() {
+  public setStore(store: Store) {
+    this.store = store;
+  }
+
+  private reset() {
     this.state = RoomClientState.NEW;
     this.device = undefined;
     this.roomId = undefined;
@@ -49,10 +52,6 @@ export class RoomClient {
     this.consumers = [];
     this.sendTransport = undefined;
     this.recvTransport = undefined;
-  }
-
-  public setStore(store: Store) {
-    this.store = store;
   }
 
   public close() {
@@ -67,15 +66,38 @@ export class RoomClient {
 
   private initSocket() {
     const socket = io(process.env.NEXT_PUBLIC_API_URL);
+    console.log({ socket });
 
     socket.on("connect", async () => {
-      const { peerId, room } = (await this.emitMessage("joinRoom", {
+      const room = (await this.emitMessage("joinRoom", {
         roomId: this.roomId,
-      })) as { peerId: string };
+      })) as { peers: [] };
       console.log({ room });
-      this.peerId = peerId;
 
       await this.initDevice();
+
+      console.log("Consuming existing peers");
+      console.log({ peers: room.peers });
+      for (const peer of room.peers) {
+        if (peer.id !== socket.id) {
+          for (const producer of peer.producers) {
+            console.log(producer);
+            await this.consume(producer.id);
+            this.store.dispatch(
+              roomActions.addConsumer({
+                consumer: {
+                  id: consumer.id,
+                  track: consumer.track,
+                  peerId: peer.peerId,
+                },
+              })
+            );
+            console.log("RESUMING");
+            await this.resumeConsumer(consumer.id);
+          }
+        }
+      }
+
       console.log("Connected to the server!");
     });
 
@@ -91,7 +113,8 @@ export class RoomClient {
     socket.on(
       "newProducer",
       async (peer: { producerId: string; peerId: string }) => {
-        console.log({ newPeer: peer });
+        if (!this.socket) return;
+        if (this.socket.id === peer.peerId) return;
         if (
           this.consumers.find(
             (consumer) => consumer.producerId === peer.producerId
@@ -133,9 +156,11 @@ export class RoomClient {
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTING));
     this.roomId = roomId;
     this.socket = this.initSocket();
+    console.log("joining room", this.socket);
   }
 
   leaveRoom() {
+    console.log("disconnecting", this.socket);
     this.socket?.disconnect();
     this.close();
     this.store.dispatch(roomActions.leaveRoom());
@@ -144,6 +169,7 @@ export class RoomClient {
   private async initDevice() {
     const handlerName = detectDevice();
     this.device = new Device({ handlerName });
+    console.log({ device: this.device });
     const { routerRtpCapabilities } = await this.emitMessage<{
       routerRtpCapabilities: RtpCapabilities;
     }>("getRouterRtpCapabilities", { roomId: this.roomId });
@@ -271,6 +297,7 @@ export class RoomClient {
   //   }
 
   private async createProducerTransport() {
+    console.log("creating send Producer transport");
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
@@ -309,7 +336,6 @@ export class RoomClient {
             transportId: producerTransport!.id,
             kind,
             rtpParameters,
-            peerId: this.peerId,
           },
           ({ producerId }: { producerId: string }) => {
             callback({ id: producerId });
@@ -318,10 +344,13 @@ export class RoomClient {
       }
     );
 
+    console.log({ producerTransport });
+
     return producerTransport;
   }
 
   async consume(producerId: string) {
+    console.log("consuming");
     if (!this.device) {
       throw new Error("Device not instanciated");
     }

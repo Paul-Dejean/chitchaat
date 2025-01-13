@@ -24,6 +24,7 @@ export class MediasoupGateway
   server: Server;
 
   handleConnection(client: Socket) {
+    client.onAny((event, args) => console.log({ event, args }));
     this.logger.log(`Client connected: ${client.id}`);
   }
 
@@ -37,12 +38,23 @@ export class MediasoupGateway
     @Body() { roomId, displayName }: { roomId: string; displayName: string },
   ) {
     await client.join(roomId);
-    return this.roomService.joinRoom(roomId, displayName);
+    console.log({ socketId: client.id, roomId, displayName });
+    const room = this.roomService.joinRoom(roomId, {
+      displayName,
+      id: client.id,
+    });
+    return room;
   }
 
   @SubscribeMessage('createTransport')
-  async createTransport(@Body() { roomId }: { roomId: string }) {
-    const transport = await this.mediasoupService.createWebRtcTransport(roomId);
+  async createTransport(
+    @ConnectedSocket() client: Socket,
+    @Body() { roomId }: { roomId: string },
+  ) {
+    const transport = await this.mediasoupService.createWebRtcTransport(
+      roomId,
+      client.id,
+    );
     return {
       id: transport.id,
       iceParameters: transport.iceParameters,
@@ -58,27 +70,35 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('produce')
-  async produce(@Body() { roomId, transportId, kind, rtpParameters, peerId }) {
-    const producer = await this.mediasoupService.produce(
+  async produce(
+    @ConnectedSocket() client: Socket,
+    @Body() { roomId, transportId, kind, rtpParameters },
+  ) {
+    const producer = await this.mediasoupService.produce({
+      peerId: client.id,
       roomId,
       transportId,
       kind,
       rtpParameters,
-    );
+    });
     this.server
       .to(roomId)
-      .emit('newProducer', { producerId: producer.id, peerId });
+      .emit('newProducer', { producerId: producer.id, peerId: client.id });
     return { producerId: producer.id };
   }
 
   @SubscribeMessage('consume')
-  async consume(@Body() { roomId, producerId, rtpCapabilities, consumerId }) {
-    const consumer = await this.mediasoupService.consume(
+  async consume(
+    @ConnectedSocket() client: Socket,
+    @Body() { roomId, producerId, rtpCapabilities, consumerId },
+  ) {
+    const consumer = await this.mediasoupService.consume({
+      peerId: client.id,
       roomId,
       consumerId,
       producerId,
       rtpCapabilities,
-    );
+    });
     consumer.on('producerclose', () => {
       this.server
         .to(roomId)

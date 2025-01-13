@@ -1,6 +1,6 @@
 "use client";
 import { RoomClient } from "@/lib/roomClient";
-import { createContext, useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { store } from "@/store";
 
 const roomClient = new RoomClient({ store });
@@ -27,3 +27,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({
     <RoomContext.Provider value={roomClient}>{children}</RoomContext.Provider>
   );
 };
+
+export function useRoomClient() {
+  return useContext(RoomContext);
+}

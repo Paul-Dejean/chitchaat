@@ -44,9 +44,9 @@ export class MediasoupService {
     const router = await this.worker.createRouter({ mediaCodecs });
     return router;
   }
-  async createWebRtcTransport(roomId: string) {
+  async createWebRtcTransport(roomId: string, peerId: string) {
     const { listenIps, initialAvailableOutgoingBitrate } = {
-      listenIps: [{ ip: '0.0.0.0', announcedIp: '127.0.0.1' }],
+      listenIps: [{ ip: '0.0.0.0', announcedIp: '192.168.6.136' }],
       initialAvailableOutgoingBitrate: 1000000,
     };
 
@@ -55,12 +55,12 @@ export class MediasoupService {
     const transport = await room.router.createWebRtcTransport({
       listenIps,
       enableUdp: true,
-      enableTcp: true,
+      enableTcp: false,
       preferUdp: true,
       initialAvailableOutgoingBitrate,
     });
 
-    this.roomsService.addTransport(roomId, transport);
+    this.roomsService.addTransport(roomId, peerId, transport);
     return transport;
   }
 
@@ -82,12 +82,19 @@ export class MediasoupService {
     console.log('transport connected', dtlsParameters);
   }
 
-  async produce(
-    roomId: string,
-    transportId: string,
-    kind: 'video' | 'audio',
-    rtpParameters: MediasoupTypes.RtpParameters,
-  ) {
+  async produce({
+    peerId,
+    roomId,
+    transportId,
+    kind,
+    rtpParameters,
+  }: {
+    peerId: string;
+    roomId: string;
+    transportId: string;
+    kind: 'video' | 'audio';
+    rtpParameters: MediasoupTypes.RtpParameters;
+  }) {
     const transport = await this.roomsService.getTransportById(
       roomId,
       transportId,
@@ -102,17 +109,24 @@ export class MediasoupService {
       rtpParameters,
     });
 
-    this.roomsService.addProducer(roomId, producer);
+    this.roomsService.addProducer(roomId, peerId, producer);
 
     return producer;
   }
 
-  async consume(
-    roomId: string,
-    consumerId: string,
-    producerId: string,
-    rtpCapabilities: MediasoupTypes.RtpCapabilities,
-  ) {
+  async consume({
+    consumerId,
+    peerId,
+    producerId,
+    roomId,
+    rtpCapabilities,
+  }: {
+    peerId: string;
+    roomId: string;
+    consumerId: string;
+    producerId: string;
+    rtpCapabilities: MediasoupTypes.RtpCapabilities;
+  }) {
     const consumerTransport = await this.roomsService.getTransportById(
       roomId,
       consumerId,
@@ -135,7 +149,7 @@ export class MediasoupService {
         paused: true, // Start in paused state, resume after transport connect
       });
 
-      this.roomsService.addConsumer(roomId, consumer);
+      this.roomsService.addConsumer(roomId, peerId, consumer);
 
       return consumer;
     } catch (error) {
@@ -144,34 +158,22 @@ export class MediasoupService {
   }
 
   async resumeConsumer(roomId: string, consumerId: string) {
-    const room = await this.roomsService.getRoomById(roomId);
-    const consumer = room.consumers.find(
-      (roomConsumer) => roomConsumer.id === consumerId,
-    );
+    const consumer = this.roomsService.getConsumerById(roomId, consumerId);
     await consumer.resume();
   }
 
   async pauseProducer(roomId: string, producerId: string) {
-    const room = this.roomsService.getRoomById(roomId);
-    const producer = room.producers.find(
-      (roomProducer) => roomProducer.id === producerId,
-    );
+    const producer = this.roomsService.getProducerById(roomId, producerId);
     await producer.pause();
   }
 
   async resumeProducer(roomId: string, producerId: string) {
-    const room = this.roomsService.getRoomById(roomId);
-    const producer = room.producers.find(
-      (roomProducer) => roomProducer.id === producerId,
-    );
+    const producer = this.roomsService.getProducerById(roomId, producerId);
     await producer.resume();
   }
 
   async closeProducer(roomId: string, producerId: string) {
-    const room = this.roomsService.getRoomById(roomId);
-    const producer = room.producers.find(
-      (roomProducer) => roomProducer.id === producerId,
-    );
+    const producer = this.roomsService.getProducerById(roomId, producerId);
     await producer.close();
   }
   public async getRouterRtpCapabilities(roomId: string) {

@@ -34,9 +34,7 @@ export default function RoomPage() {
             {/* <p className="text-secondary text-sm">{`${today.toLocaleDateString()} ${today.toLocaleTimeString()}`}</p> */}
           </div>
         </div>
-        <div className="mb-8 flex-1">
-          {room && <VideoBoard room={room}></VideoBoard>}
-        </div>
+        <div className="mb-8 flex-1">{room && <VideoBoard></VideoBoard>}</div>
       </div>
     </RoomProvider>
   );
