@@ -14,6 +14,7 @@ export default function Home() {
   const router = useRouter();
   const onCreateRoomClick = async () => {
     const { id: roomId } = await createRoom();
+    console.log({ redirect: `/rooms/?roomId=${roomId}` });
     router.push(`/rooms/?roomId=${roomId}`, {});
   };
   return (
