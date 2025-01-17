@@ -34,3 +34,43 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'eu-west-3'
+
+  deploy_backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: docker build --platform linux/amd64 -t 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest .
+
+      - name: Deploy to ECR
+        run: |
+          aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin 311535938619.dkr.ecr.eu-west-3.amazonaws.com
+          docker push 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'eu-west-3'
+
+      - name: Update docker container
+        run: >
+          aws ssm send-command
+          --document-name "AWS-RunShellScript"
+          --document-version "1"
+          --targets '[{"Key":"InstanceIds","Values":["i-04714a66cf047fc04"]}]'
+          --parameters '{"workingDirectory":[""],"executionTimeout":["3600"],"commands":["docker pull 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest","docker stop $(docker ps -aq)","docker rm $(docker ps -aq)","docker run --name backend -d -p 80:3001 -p 10000-10100:10000-10100/udp 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest"]}'
+          --timeout-seconds 600
+          --max-concurrency "50"
+          --max-errors "0"
+          --region eu-west-3
