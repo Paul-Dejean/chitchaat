@@ -46,7 +46,13 @@ export class MediasoupService {
   }
   async createWebRtcTransport(roomId: string, peerId: string) {
     const { listenIps, initialAvailableOutgoingBitrate } = {
-      listenIps: [{ ip: '0.0.0.0', announcedIp: '192.168.6.136' }],
+      //listenIps: [{ ip: '0.0.0.0', announcedIp: '51.44.122.113' }],
+      listenIps: [
+        {
+          ip: '0.0.0.0',
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP ?? '127.0.0.1',
+        },
+      ],
       initialAvailableOutgoingBitrate: 1000000,
     };
 
@@ -55,7 +61,7 @@ export class MediasoupService {
     const transport = await room.router.createWebRtcTransport({
       listenIps,
       enableUdp: true,
-      enableTcp: false,
+      enableTcp: true,
       preferUdp: true,
       initialAvailableOutgoingBitrate,
     });
@@ -147,6 +153,14 @@ export class MediasoupService {
         producerId,
         rtpCapabilities,
         paused: true, // Start in paused state, resume after transport connect
+      });
+
+      consumer.on('transportclose', () => {
+        this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
+      });
+
+      consumer.on('producerclose', () => {
+        this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
       });
 
       this.roomsService.addConsumer(roomId, peerId, consumer);

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { types as MediasoupTypes } from 'mediasoup';
+import util from 'util';
+util.inspect.defaultOptions.depth = null;
 
 type Room = {
   id: string;
   peers: Peer[];
+  isClosed: boolean;
   router: MediasoupTypes.Router;
-  producers: Map<string, MediasoupTypes.Producer>;
-  consumers: Map<string, MediasoupTypes.Consumer>;
-  transports: Map<string, MediasoupTypes.Transport>;
 };
 
 type Peer = {
@@ -20,6 +20,7 @@ type Peer = {
 @Injectable()
 export class RoomsService {
   rooms: Room[] = [];
+
   constructor() {}
 
   getRoomById(roomId: string) {
@@ -31,6 +32,7 @@ export class RoomsService {
       id: roomId,
       router,
       peers: [],
+      isClosed: false,
       producers: new Map(),
       consumers: new Map(),
       transports: new Map(),
@@ -41,18 +43,37 @@ export class RoomsService {
 
   joinRoom(roomId: string, newPeer: { displayName: string; id: string }) {
     const room = this.getRoomById(roomId);
+    if (room.peers.some((peer) => peer.id === newPeer.id)) {
+      throw new Error('Peer has already joined the room');
+    }
     room.peers.push({
       ...newPeer,
       producers: [],
       consumers: [],
       transports: [],
     });
+
     return room;
+  }
+
+  deletePeer(roomId: string, peerId: string) {
+    const room = this.getRoomById(roomId);
+    if (room.isClosed) return;
+
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.transports.forEach((transport) => transport.close());
+    room.peers = room.peers.filter((peer) => peer.id !== peerId);
+    if (room.peers.length === 0) {
+      room.router.close();
+      room.isClosed = true;
+    }
   }
 
   getTransportById(roomId: string, transportId: string) {
     const room = this.getRoomById(roomId);
-    return room.transports.get(transportId);
+    return room.peers
+      .flatMap((peer) => peer.transports)
+      .find((transport) => transport.id === transportId);
   }
 
   addTransport(
@@ -63,14 +84,14 @@ export class RoomsService {
     const room = this.getRoomById(roomId);
     const peer = room.peers.find((peer) => peer.id === peerId);
     peer.transports.push(transport);
-    room.transports.set(transport.id, transport);
-    console.log({ room });
     return transport;
   }
 
   getProducerById(roomId: string, producerId: string) {
     const room = this.getRoomById(roomId);
-    return room.producers.get(producerId);
+    return room.peers
+      .flatMap((peer) => peer.producers)
+      .find((producer) => producer.id === producerId);
   }
 
   addProducer(
@@ -80,15 +101,24 @@ export class RoomsService {
   ) {
     const room = this.getRoomById(roomId);
     const peer = room.peers.find((peer) => peer.id === peerId);
-    peer.producers.push({ ...producer, id: producer.id });
-    room.producers.set(producer.id, producer);
-    console.log('added producer', { room });
+    peer.producers.push(producer);
+
     return producer;
+  }
+
+  deleteProducer(roomId: string, peerId: string, producerId: string) {
+    const room = this.getRoomById(roomId);
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.producers = peer.producers.filter(
+      (producer) => producer.id !== producerId,
+    );
   }
 
   getConsumerById(roomId: string, consumerId: string) {
     const room = this.getRoomById(roomId);
-    return room.consumers.get(consumerId);
+    return room.peers
+      .flatMap((peer) => peer.consumers)
+      .find((consumer) => consumer.id === consumerId);
   }
 
   addConsumer(
@@ -99,8 +129,14 @@ export class RoomsService {
     const room = this.getRoomById(roomId);
     const peer = room.peers.find((peer) => peer.id === peerId);
     peer.consumers.push(consumer);
-    room.consumers.set(consumer.id, consumer);
-    console.log({ room });
     return consumer;
+  }
+
+  deleteConsumer(roomId: string, peerId: string, consumerId: string) {
+    const room = this.getRoomById(roomId);
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    peer.consumers = peer.consumers.filter(
+      (consumer) => consumer.id !== consumerId,
+    );
   }
 }

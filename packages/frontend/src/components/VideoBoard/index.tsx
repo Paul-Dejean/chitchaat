@@ -135,9 +135,16 @@ export function VideoBoard() {
   return (
     <div className="flex flex-col h-full mt-4 gap-4">
       <div className="flex gap-x-4 flex-1">
-        <Peer videoTrack={currentTrack} />
+        <div className="w-full h-full">
+          <Peer
+            videoTrack={currentTrack}
+            isMicrophoneEnabled={roomState.isAudioEnabled}
+          />
+        </div>
         {consumerPerPeer.map(({ audioTrack, videoTrack, peerId }) => (
-          <Peer key={peerId} audioTrack={audioTrack} videoTrack={videoTrack} />
+          <div key={peerId} className="w-full h-full">
+            <Peer audioTrack={audioTrack} videoTrack={videoTrack} />
+          </div>
         ))}
         <Chat isOpen={isChatOpen} />
       </div>

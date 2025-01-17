@@ -14,7 +14,7 @@ export default function Home() {
   const router = useRouter();
   const onCreateRoomClick = async () => {
     const { id: roomId } = await createRoom();
-    router.push(`/rooms?roomId=${roomId}`);
+    router.push(`/rooms/?roomId=${roomId}`, {});
   };
   return (
     <main className="h-screen  flex items-center justify-center">

@@ -30,6 +30,11 @@ export class MediasoupGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    for (const room of this.roomService.rooms) {
+      if (room.peers.some((peer) => peer.id === client.id)) {
+        this.roomService.deletePeer(room.id, client.id);
+      }
+    }
   }
 
   @SubscribeMessage('joinRoom')
@@ -55,6 +60,21 @@ export class MediasoupGateway
       roomId,
       client.id,
     );
+
+    transport.on('icestatechange', (iceState) => {
+      if (iceState === 'disconnected' || iceState === 'closed') {
+        client.disconnect();
+        console.log('iceStateChange failed - client deconnected', iceState);
+      }
+    });
+
+    transport.on('dtlsstatechange', (dtlsState) => {
+      if (dtlsState === 'failed' || dtlsState === 'closed') {
+        client.disconnect();
+        console.log('dtlsStateChange failed - client deconnected', dtlsState);
+      }
+    });
+
     return {
       id: transport.id,
       iceParameters: transport.iceParameters,
@@ -127,9 +147,11 @@ export class MediasoupGateway
 
   @SubscribeMessage('closeProducer')
   async closeProducer(
+    @ConnectedSocket() client: Socket,
     @Body() { producerId, roomId }: { producerId: string; roomId: string },
   ) {
     await this.mediasoupService.closeProducer(roomId, producerId);
+    await this.roomService.deleteProducer(roomId, client.id, producerId);
   }
 
   @SubscribeMessage('resumeConsumer')

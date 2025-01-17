@@ -1,6 +1,8 @@
 export async function createRoom() {
   try {
+    console.log(process.env);
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    console.log({ baseUrl });
     const url = `${baseUrl}/rooms`;
     console.log({ url });
     const response = await fetch(url, {

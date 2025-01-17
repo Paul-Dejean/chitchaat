@@ -148,6 +148,8 @@ export class RoomClient {
       console.log(this.consumers);
       this.store.dispatch(roomActions.removeConsumer({ consumerId }));
     });
+
+    socket.on("peer");
     return socket;
   }
 
