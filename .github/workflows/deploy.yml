@@ -5,6 +5,14 @@ on:
     branches:
       - main
 
+env:
+  AWS_REGION: eu-west-3
+  AWS_ACCOUNT_ID: 311535938619
+
+permissions:
+      id-token: write
+      contents: read
+
 jobs:
   deploy_frontend:
     runs-on: ubuntu-latest
@@ -19,6 +27,7 @@ jobs:
         with:
           node-version: '22.x'
 
+
       - name: Install dependencies
         run:  npm install
 
@@ -27,13 +36,16 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://chitchaat-backend.pauldejean.dev
 
+      - name: Configure AWS credentials
+        uses:  aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::311535938619:role/GithubActionsRole
+          aws-region: $AWS_REGION
+
       - name: Upload to S3
         run: |
           aws s3 sync ./out s3://chitchaat
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'eu-west-3'
+
 
   deploy_backend:
     runs-on: ubuntu-latest
@@ -51,23 +63,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Configure AWS credentials
+        uses:  aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::311535938619:role/GithubActionsRole
+          aws-region: $AWS_REGION
+
+
       - name: Build
         run: docker build --platform linux/amd64 -t 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest .
 
       - name: Deploy to ECR
         run: |
-          aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin 311535938619.dkr.ecr.eu-west-3.amazonaws.com
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 311535938619.dkr.ecr.eu-west-3.amazonaws.com
           docker push 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:latest
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'eu-west-3'
 
       - name: Update docker container
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'eu-west-3'
         run: >
           aws ssm send-command
           --document-name "AWS-RunShellScript"
@@ -77,4 +88,4 @@ jobs:
           --timeout-seconds 600
           --max-concurrency "50"
           --max-errors "0"
-          --region eu-west-3
+          --region $AWS_REGION
