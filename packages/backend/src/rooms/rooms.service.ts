@@ -101,7 +101,7 @@ export class RoomsService {
   ) {
     const room = this.getRoomById(roomId);
     const peer = room.peers.find((peer) => peer.id === peerId);
-    peer.producers.push(producer);
+    peer.producers.push({ ...producer, id: producer.id } as any);
 
     return producer;
   }

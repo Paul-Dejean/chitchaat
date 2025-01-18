@@ -39,6 +39,7 @@ export function Peer({
           className="h-full rounded-lg w-full object-cover"
           ref={videoRef}
           autoPlay
+          muted
           playsInline
         />
       ) : (

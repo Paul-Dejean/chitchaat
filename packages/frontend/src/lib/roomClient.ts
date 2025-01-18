@@ -82,17 +82,17 @@ export class RoomClient {
         if (peer.id !== socket.id) {
           for (const producer of peer.producers) {
             console.log(producer);
-            await this.consume(producer.id);
+            const consumer = await this.consume(producer.id);
             this.store.dispatch(
               roomActions.addConsumer({
                 consumer: {
                   id: consumer.id,
                   track: consumer.track,
-                  peerId: peer.peerId,
+                  peerId: peer.id,
                 },
               })
             );
-            console.log("RESUMING");
+            console.log("RESUMING consumer");
             await this.resumeConsumer(consumer.id);
           }
         }
@@ -135,6 +135,7 @@ export class RoomClient {
             },
           })
         );
+
         console.log("RESUMING");
         await this.resumeConsumer(consumer.id);
       }
@@ -149,7 +150,6 @@ export class RoomClient {
       this.store.dispatch(roomActions.removeConsumer({ consumerId }));
     });
 
-    socket.on("peer");
     return socket;
   }
 
@@ -203,7 +203,9 @@ export class RoomClient {
         producerId: this.videoProducer.id,
       });
     } else {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
       const track = stream.getVideoTracks()[0];
       this.videoProducer = await this.createProducer(track);
     }
@@ -352,7 +354,7 @@ export class RoomClient {
   }
 
   async consume(producerId: string) {
-    console.log("consuming");
+    console.log("consuming", producerId);
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
@@ -366,6 +368,8 @@ export class RoomClient {
       rtpCapabilities: this.device.rtpCapabilities,
       consumerId: this.recvTransport.id,
     });
+
+    console.log({ kind, rtpParameters, id });
 
     const consumer = await this.recvTransport.consume({
       id,
@@ -414,7 +418,7 @@ export class RoomClient {
   }
 
   async resumeConsumer(consumerId: string) {
-    console.log("resuming", consumerId);
+    console.log("resuming", consumerId, this.roomId);
     await this.emitMessage("resumeConsumer", {
       roomId: this.roomId,
       consumerId: consumerId,

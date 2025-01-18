@@ -45,6 +45,7 @@ export class MediasoupService {
     return router;
   }
   async createWebRtcTransport(roomId: string, peerId: string) {
+    console.log({ MEDIASOUP: process.env.MEDIASOUP_ANNOUNCED_IP });
     const { listenIps, initialAvailableOutgoingBitrate } = {
       //listenIps: [{ ip: '0.0.0.0', announcedIp: '51.44.122.113' }],
       listenIps: [
@@ -172,7 +173,9 @@ export class MediasoupService {
   }
 
   async resumeConsumer(roomId: string, consumerId: string) {
+    console.log({ roomId, consumerId });
     const consumer = this.roomsService.getConsumerById(roomId, consumerId);
+    console.log({ hello: consumer });
     await consumer.resume();
   }
 
