@@ -46,12 +46,12 @@ export function VideoBoard() {
         displayName: peer.displayName,
         audioTrack: audioConsumer?.track,
         videoTrack: videoConsumer?.track,
-        isAudioPaused: audioConsumer?.isPaused,
-        isVideoPaused: videoConsumer?.isPaused,
+        isAudioPaused: audioConsumer?.isPaused ?? true,
+        isVideoPaused: videoConsumer?.isPaused ?? true,
       };
     });
 
-  console.log({ isChatOpen });
+  console.log({ isChatOpen, allPeers });
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -147,26 +147,16 @@ export function VideoBoard() {
             isMicrophoneEnabled={roomState.isAudioEnabled}
             displayName={"me"}
             isMe={true}
-            isAudioPaused={false}
-            isVideoPaused={false}
           />
         </div>
         {allPeers.map(
-          ({
-            audioTrack,
-            videoTrack,
-            id,
-            displayName,
-            isAudioPaused,
-            isVideoPaused,
-          }) => (
+          ({ audioTrack, videoTrack, id, displayName, isAudioPaused }) => (
             <div key={id} className="w-full h-full">
               <Peer
                 audioTrack={audioTrack}
                 videoTrack={videoTrack}
                 displayName={displayName}
-                isAudioPaused={isAudioPaused}
-                isVideoPaused={isVideoPaused}
+                isMicrophoneEnabled={!isAudioPaused}
                 isMe={false}
               />
             </div>

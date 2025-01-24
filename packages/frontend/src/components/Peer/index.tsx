@@ -8,8 +8,6 @@ type PeerProps = {
   videoTrack?: MediaStreamTrack | null;
   displayName: string;
   isMe: boolean;
-  isAudioPaused: boolean;
-  isVideoPaused: boolean;
   isMicrophoneEnabled?: boolean;
 };
 
@@ -17,8 +15,7 @@ export function Peer({
   audioTrack,
   videoTrack,
   displayName,
-  isAudioPaused,
-  isVideoPaused,
+
   isMicrophoneEnabled = false,
 }: PeerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -28,30 +25,19 @@ export function Peer({
     if (videoRef.current && videoTrack) {
       console.log("setting video track");
       videoRef.current.srcObject = new MediaStream([videoTrack]);
-      if (isVideoPaused) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
     }
-  }, [videoTrack, isVideoPaused]);
+  }, [videoTrack]);
 
   useEffect(() => {
     if (audioRef.current && audioTrack) {
       audioRef.current.srcObject = new MediaStream([audioTrack]);
-      if (isAudioPaused) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
     }
-  }, [audioTrack, isAudioPaused]);
+  }, [audioTrack]);
 
   console.log({
     audioTrack,
     videoTrack,
-    isAudioPaused,
-    isVideoPaused,
+    isMicrophoneEnabled,
     videoRef,
     audioRef,
   });
@@ -61,7 +47,7 @@ export function Peer({
       {audioTrack && (
         <audio className="h-full" ref={audioRef} autoPlay playsInline />
       )}
-      {videoTrack && !isVideoPaused ? (
+      {videoTrack ? (
         <video
           className="h-full rounded-lg w-full object-cover"
           ref={videoRef}

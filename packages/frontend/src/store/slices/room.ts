@@ -95,11 +95,12 @@ export const roomSlice = createSlice({
       );
     },
     pauseConsumer: (state, action: PayloadAction<{ consumerId: string }>) => {
+      console.log("pausing consumer", { action });
       const consumer = state.consumers.find(
         (consumer) => consumer.id === action.payload.consumerId
       );
       if (!consumer) return;
-      consumer.isPaused = false;
+      consumer.isPaused = true;
     },
     resumeConsumer: (state, action: PayloadAction<{ consumerId: string }>) => {
       const consumer = state.consumers.find(
