@@ -8,6 +8,7 @@ import { RoomsController } from './rooms/rooms.controller';
 import { RoomsService } from './rooms/rooms.service';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './logging/logging.interceptor';
+import { DisplayNameGeneratorService } from './display-name-generator/display-name-generator.service';
 
 @Module({
   imports: [],
@@ -21,6 +22,7 @@ import { LoggingInterceptor } from './logging/logging.interceptor';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
+    DisplayNameGeneratorService,
   ],
 })
 export class AppModule {}

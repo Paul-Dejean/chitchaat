@@ -24,27 +24,33 @@ import { Chat } from "../Chat";
 
 export function VideoBoard() {
   const roomClient = useRoomClient();
-  console.log({ roomClient });
   const roomState = useSelector((state) => state.room);
+  const peers = useSelector((state) => state.room.peers);
   const consumers = useSelector((state) => state.room.consumers);
   const isChatOpen = useSelector((state) => state.room.isChatOpen);
   console.log({ consumers });
 
-  const peerIds = [...new Set(consumers.map((consumer) => consumer.peerId))];
-  console.log(peerIds);
-  const consumerPerPeer = peerIds.map((peerId) => ({
-    peerId,
-    audioTrack: consumers.filter(
-      (consumer) =>
-        consumer.peerId === peerId && consumer.track.kind === "audio"
-    )?.[0]?.track,
-    videoTrack: consumers.filter(
-      (consumer) =>
-        consumer.peerId === peerId && consumer.track.kind === "video"
-    )?.[0]?.track,
-  }));
+  const allPeers = Object.values(peers)
+    .filter((peer) => !peer.isMe)
+    .map((peer) => {
+      const audioConsumer = consumers.filter(
+        (consumer) =>
+          consumer.peerId === peer.id && consumer.track.kind === "audio"
+      )?.[0];
+      const videoConsumer = consumers.filter(
+        (consumer) =>
+          consumer.peerId === peer.id && consumer.track.kind === "video"
+      )?.[0];
+      id: return {
+        id: peer.id,
+        displayName: peer.displayName,
+        audioTrack: audioConsumer?.track,
+        videoTrack: videoConsumer?.track,
+        isAudioPaused: audioConsumer?.isPaused,
+        isVideoPaused: videoConsumer?.isPaused,
+      };
+    });
 
-  console.log(consumerPerPeer);
   console.log({ isChatOpen });
 
   const dispatch = useDispatch();
@@ -139,13 +145,34 @@ export function VideoBoard() {
           <Peer
             videoTrack={currentTrack}
             isMicrophoneEnabled={roomState.isAudioEnabled}
+            displayName={"me"}
+            isMe={true}
+            isAudioPaused={false}
+            isVideoPaused={false}
           />
         </div>
-        {consumerPerPeer.map(({ audioTrack, videoTrack, peerId }) => (
-          <div key={peerId} className="w-full h-full">
-            <Peer audioTrack={audioTrack} videoTrack={videoTrack} />
-          </div>
-        ))}
+        {allPeers.map(
+          ({
+            audioTrack,
+            videoTrack,
+            id,
+            displayName,
+            isAudioPaused,
+            isVideoPaused,
+          }) => (
+            <div key={id} className="w-full h-full">
+              <Peer
+                audioTrack={audioTrack}
+                videoTrack={videoTrack}
+                displayName={displayName}
+                isAudioPaused={isAudioPaused}
+                isVideoPaused={isVideoPaused}
+                isMe={false}
+              />
+            </div>
+          )
+        )}
+
         <Chat isOpen={isChatOpen} />
       </div>
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { types as MediasoupTypes } from 'mediasoup';
+import { DisplayNameGeneratorService } from 'src/display-name-generator/display-name-generator.service';
 import util from 'util';
 util.inspect.defaultOptions.depth = null;
 
@@ -21,7 +22,7 @@ type Peer = {
 export class RoomsService {
   rooms: Room[] = [];
 
-  constructor() {}
+  constructor(private displayNameGenerator: DisplayNameGeneratorService) {}
 
   getRoomById(roomId: string) {
     return this.rooms.find((room) => room.id === roomId);
@@ -41,13 +42,18 @@ export class RoomsService {
     return room;
   }
 
-  joinRoom(roomId: string, newPeer: { displayName: string; id: string }) {
+  joinRoom(roomId: string, newPeer: { id: string }) {
     const room = this.getRoomById(roomId);
     if (room.peers.some((peer) => peer.id === newPeer.id)) {
       throw new Error('Peer has already joined the room');
     }
+    let displayName = this.displayNameGenerator.generateDisplayName();
+    while (room.peers.some((peer) => peer.displayName === displayName)) {
+      displayName = this.displayNameGenerator.generateDisplayName();
+    }
     room.peers.push({
-      ...newPeer,
+      id: newPeer.id,
+      displayName,
       producers: [],
       consumers: [],
       transports: [],
@@ -101,7 +107,7 @@ export class RoomsService {
   ) {
     const room = this.getRoomById(roomId);
     const peer = room.peers.find((peer) => peer.id === peerId);
-    peer.producers.push({ ...producer, id: producer.id } as any);
+    peer.producers.push(producer);
 
     return producer;
   }

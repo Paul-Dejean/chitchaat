@@ -7,8 +7,12 @@ import {
   Consumer,
   detectDevice,
   Device,
+  DtlsParameters,
+  IceCandidate,
+  IceParameters,
   Producer,
   RtpCapabilities,
+  RtpParameters,
   Transport,
 } from "mediasoup-client/lib/types";
 import { io, Socket } from "socket.io-client";
@@ -20,6 +24,12 @@ export enum RoomClientState {
   CLOSED = "CLOSED",
 }
 
+type TransportConnection = {
+  id: string;
+  iceParameters: IceParameters;
+  iceCandidates: IceCandidate[];
+  dtlsParameters: DtlsParameters;
+};
 export class RoomClient {
   private store: Store;
   state: RoomClientState = RoomClientState.NEW;
@@ -71,14 +81,25 @@ export class RoomClient {
     socket.on("connect", async () => {
       const room = (await this.emitMessage("joinRoom", {
         roomId: this.roomId,
-      })) as { peers: [] };
+      })) as {
+        peers: { id: string; displayName: string; producers: Producer[] }[];
+      };
       console.log({ room });
 
       await this.initDevice();
 
       console.log("Consuming existing peers");
       console.log({ peers: room.peers });
+
       for (const peer of room.peers) {
+        this.store.dispatch(
+          roomActions.addPeer({
+            id: peer.id,
+            displayName: peer.displayName,
+            consumers: [],
+            isMe: peer.id === socket.id,
+          })
+        );
         if (peer.id !== socket.id) {
           for (const producer of peer.producers) {
             console.log(producer);
@@ -89,11 +110,15 @@ export class RoomClient {
                   id: consumer.id,
                   track: consumer.track,
                   peerId: peer.id,
+                  isPaused: true,
                 },
               })
             );
             console.log("RESUMING consumer");
             await this.resumeConsumer(consumer.id);
+            this.store.dispatch(
+              roomActions.resumeConsumer({ consumerId: consumer.id })
+            );
           }
         }
       }
@@ -132,12 +157,16 @@ export class RoomClient {
               id: consumer.id,
               track: consumer.track,
               peerId: peer.peerId,
+              isPaused: true,
             },
           })
         );
 
         console.log("RESUMING");
         await this.resumeConsumer(consumer.id);
+        this.store.dispatch(
+          roomActions.resumeConsumer({ consumerId: consumer.id })
+        );
       }
     );
     socket.on("consumerClosed", ({ consumerId }) => {
@@ -148,6 +177,42 @@ export class RoomClient {
       consumer?.close();
       console.log(this.consumers);
       this.store.dispatch(roomActions.removeConsumer({ consumerId }));
+    });
+
+    socket.on("consumerPaused", ({ consumerId }) => {
+      const consumer = this.consumers.find(
+        (consumer) => consumer.id === consumerId
+      );
+      consumer?.pause();
+      this.store.dispatch(roomActions.pauseConsumer({ consumerId }));
+    });
+
+    socket.on("consumerResumed", ({ consumerId }) => {
+      console.log("consumer RESUMED", { consumerId });
+      const consumer = this.consumers.find(
+        (consumer) => consumer.id === consumerId
+      );
+      consumer?.resume();
+      this.store.dispatch(roomActions.resumeConsumer({ consumerId }));
+    });
+
+    socket.on(
+      "newPeer",
+      async (newPeer: { id: string; displayName: string }) => {
+        console.log("newPeer", { newPeer });
+        this.store.dispatch(
+          roomActions.addPeer({
+            ...newPeer,
+            consumers: [],
+            isMe: newPeer.id === socket.id,
+          })
+        );
+      }
+    );
+
+    socket.on("peerClosed", async (peerId: string) => {
+      console.log("peerClosed", { peerId });
+      this.store.dispatch(roomActions.removePeer({ peerId }));
     });
 
     return socket;
@@ -307,7 +372,9 @@ export class RoomClient {
     }
 
     const { id, iceParameters, iceCandidates, dtlsParameters } =
-      await this.emitMessage("createTransport", { roomId: this.roomId });
+      await this.emitMessage<TransportConnection>("createTransport", {
+        roomId: this.roomId,
+      });
 
     const producerTransport = this.device.createSendTransport({
       id,
@@ -362,7 +429,11 @@ export class RoomClient {
       throw new Error("Recv transport not instanciated");
     }
 
-    const { kind, rtpParameters, id } = await this.emitMessage("consume", {
+    const { kind, rtpParameters, id } = await this.emitMessage<{
+      kind: "video" | "audio";
+      rtpParameters: RtpParameters;
+      id: string;
+    }>("consume", {
       roomId: this.roomId,
       producerId,
       rtpCapabilities: this.device.rtpCapabilities,
@@ -389,7 +460,9 @@ export class RoomClient {
       throw new Error("Device not instanciated");
     }
     const { id, iceParameters, iceCandidates, dtlsParameters } =
-      await this.emitMessage("createTransport", { roomId: this.roomId });
+      await this.emitMessage<TransportConnection>("createTransport", {
+        roomId: this.roomId,
+      });
 
     const consumerTransport = this.device.createRecvTransport({
       id,
