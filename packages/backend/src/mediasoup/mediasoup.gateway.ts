@@ -29,12 +29,13 @@ export class MediasoupGateway
   }
 
   handleDisconnect(client: Socket) {
+    console.log('disconnected');
     this.logger.log(`Client disconnected: ${client.id}`);
-    for (const room of this.roomService.rooms) {
-      if (room.peers.some((peer) => peer.id === client.id)) {
-        this.roomService.deletePeer(room.id, client.id);
-      }
-    }
+    const room = this.roomService.getRoomByPeerId(client.id);
+    if (!room) return;
+    this.roomService.deletePeer(room.id, client.id);
+
+    this.server.to(room.id).emit('peerClosed', { peerId: client.id });
   }
 
   @SubscribeMessage('joinRoom')
@@ -47,11 +48,19 @@ export class MediasoupGateway
     const room = this.roomService.joinRoom(roomId, {
       id: client.id,
     });
+
     const newPeer = room.peers.find((peer) => peer.id === client.id);
     this.server
       .to(roomId)
       .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
-    return room;
+    return {
+      ...room,
+      peers: room.peers.map((peer) => ({
+        id: peer.id,
+        displayName: peer.displayName,
+        producers: peer.producers.map((producer) => ({ id: producer.id })),
+      })),
+    };
   }
 
   @SubscribeMessage('createTransport')

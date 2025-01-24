@@ -28,6 +28,12 @@ export class RoomsService {
     return this.rooms.find((room) => room.id === roomId);
   }
 
+  getRoomByPeerId(peerId: string) {
+    return this.rooms.find((room) =>
+      room.peers.some((peer) => peer.id === peerId),
+    );
+  }
+
   async createRoom(roomId: string, router: MediasoupTypes.Router) {
     const room = {
       id: roomId,

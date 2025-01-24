@@ -76,15 +76,17 @@ export const roomSlice = createSlice({
     },
 
     removePeer: (state, action: PayloadAction<{ peerId: string }>) => {
+      console.log("removing");
       state.peers = Object.fromEntries(
         Object.entries(state.peers).filter(
           ([key]) => key !== action.payload.peerId
         )
       );
+      console.log({ peers: state.peers });
     },
 
     addConsumer: (state, action: PayloadAction<{ consumer: Consumer }>) => {
-      console.log(action);
+      console.log("add consumer", action);
       state.consumers.push(action.payload.consumer);
     },
     removeConsumer: (state, action: PayloadAction<{ consumerId: string }>) => {

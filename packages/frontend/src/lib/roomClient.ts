@@ -92,6 +92,7 @@ export class RoomClient {
       console.log({ peers: room.peers });
 
       for (const peer of room.peers) {
+        console.log({ peerId: peer.id, displayName: peer.displayName });
         this.store.dispatch(
           roomActions.addPeer({
             id: peer.id,
@@ -104,13 +105,20 @@ export class RoomClient {
           for (const producer of peer.producers) {
             console.log(producer);
             const consumer = await this.consume(producer.id);
+            console.log({
+              consumer,
+              consumerId: consumer.id,
+              track: consumer.track,
+              peerId: peer.id,
+              isPaused: consumer.paused,
+            });
             this.store.dispatch(
               roomActions.addConsumer({
                 consumer: {
                   id: consumer.id,
                   track: consumer.track,
                   peerId: peer.id,
-                  isPaused: true,
+                  isPaused: consumer.paused,
                 },
               })
             );
@@ -157,7 +165,7 @@ export class RoomClient {
               id: consumer.id,
               track: consumer.track,
               peerId: peer.peerId,
-              isPaused: true,
+              isPaused: consumer.paused,
             },
           })
         );
@@ -210,7 +218,7 @@ export class RoomClient {
       }
     );
 
-    socket.on("peerClosed", async (peerId: string) => {
+    socket.on("peerClosed", async ({ peerId }: { peerId: string }) => {
       console.log("peerClosed", { peerId });
       this.store.dispatch(roomActions.removePeer({ peerId }));
     });
