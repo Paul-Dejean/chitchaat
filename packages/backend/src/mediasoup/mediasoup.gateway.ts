@@ -90,6 +90,7 @@ export class MediasoupGateway
 
     this.server
       .to(roomId)
+      .except(client.id)
       .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
 
     return {
@@ -126,15 +127,15 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(connectTransportSchema))
     { roomId, transportId, dtlsParameters }: ConnectTransportDto,
   ) {
-    console.log({ transportId, dtlsParameters });
     await this.transportsService.connectTransport(
       roomId,
       transportId,
       dtlsParameters,
     );
+    return { isConnected: true };
   }
 
-  @SubscribeMessage('produce')
+  @SubscribeMessage('createProducer')
   async createProducer(
     @ConnectedSocket() client: Socket,
     @MessageBody(new ZodValidationPipe(createProducerSchema))
@@ -149,11 +150,12 @@ export class MediasoupGateway
     });
     this.server
       .to(roomId)
+      .except(client.id)
       .emit('newProducer', { producerId: producer.id, peerId: client.id });
     return { producerId: producer.id };
   }
 
-  @SubscribeMessage('consume')
+  @SubscribeMessage('createConsumer')
   async createConsumer(
     @ConnectedSocket() client: Socket,
     @MessageBody(new ZodValidationPipe(createConsumerSchema))

@@ -61,7 +61,7 @@ export function VideoBoard() {
   );
 
   async function onEndCallClick() {
-    await roomClient.close();
+    await roomClient.leaveRoom();
     router.push("/");
   }
 

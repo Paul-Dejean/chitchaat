@@ -1,4 +1,4 @@
-import { RoomClientState } from "@/lib/roomClient";
+import { RoomClientState } from "@/lib/RoomClient";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Producer } from "mediasoup-client/lib/types";
 
@@ -115,11 +115,8 @@ export const roomSlice = createSlice({
       state.state = action.payload;
     },
     leaveRoom: (state) => {
-      state.state = RoomClientState.NEW;
-      state.isAudioEnabled = false;
-      state.isVideoEnabled = false;
-      state.isScreenSharingEnabled = false;
-      state.consumers = [];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      state = initialState;
     },
   },
 });
