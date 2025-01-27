@@ -13,6 +13,7 @@ import { TransportsService } from './transports/transports.service';
 import { ConsumersService } from './consumers/consumers.service';
 import { ProducersService } from './producers/producers.service';
 import { ClientsService } from './clients/clients.service';
+import { WsExceptionFilter } from './common/filters/ws-exception-filter/ws-exception-filter';
 
 @Module({
   imports: [],
@@ -31,6 +32,7 @@ import { ClientsService } from './clients/clients.service';
     ConsumersService,
     ProducersService,
     ClientsService,
+    WsExceptionFilter,
   ],
 })
 export class AppModule {}

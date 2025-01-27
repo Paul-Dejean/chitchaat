@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -33,7 +33,9 @@ import {
   resumeProducerSchema,
 } from './mediasoup.schemas';
 import { ClientsService } from 'src/clients/clients.service';
+import { WsExceptionFilter } from 'src/common/filters/ws-exception-filter/ws-exception-filter';
 @WebSocketGateway({ cors: '*' })
+@UseFilters(WsExceptionFilter)
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
