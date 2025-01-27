@@ -31,48 +31,50 @@ export class ConsumersService extends EventEmitter {
     }
 
     const room = await this.roomsService.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
 
     if (!room.router.canConsume({ producerId, rtpCapabilities })) {
       throw new Error('Cannot consume');
     }
 
-    try {
-      const consumer = await consumerTransport.consume({
-        producerId,
-        rtpCapabilities,
-        paused: true, // Start in paused state, resume after transport connect
-      });
+    const consumer = await consumerTransport.consume({
+      producerId,
+      rtpCapabilities,
+      paused: true, // Start in paused state, resume after transport connect
+    });
 
-      consumer.on('transportclose', () => {
-        this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
-      });
+    consumer.on('transportclose', () => {
+      this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
+    });
 
-      consumer.on('producerclose', () => {
-        this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
-      });
+    consumer.on('producerclose', () => {
+      this.roomsService.deleteConsumer(roomId, peerId, consumer.id);
+    });
 
-      consumer.on('producerclose', () => {
-        this.emit('producerClosed', { roomId, consumerId: consumer.id });
-      });
+    consumer.on('producerclose', () => {
+      this.emit('producerClosed', { roomId, consumerId: consumer.id });
+    });
 
-      consumer.on('producerpause', () => {
-        this.emit('producerPaused', { roomId, consumerId: consumer.id });
-      });
+    consumer.on('producerpause', () => {
+      this.emit('producerPaused', { roomId, consumerId: consumer.id });
+    });
 
-      consumer.on('producerresume', () => {
-        this.emit('producerResumed', { roomId, consumerId: consumer.id });
-      });
+    consumer.on('producerresume', () => {
+      this.emit('producerResumed', { roomId, consumerId: consumer.id });
+    });
 
-      this.roomsService.addConsumer(roomId, peerId, consumer);
+    this.roomsService.addConsumer(roomId, peerId, consumer);
 
-      return consumer;
-    } catch (error) {
-      console.error('consume failed', error);
-    }
+    return consumer;
   }
 
   async resumeConsumer(roomId: string, consumerId: string) {
     const consumer = this.roomsService.getConsumerById(roomId, consumerId);
+    if (!consumer) {
+      throw new Error('Consumer not found');
+    }
     await consumer.resume();
   }
 }

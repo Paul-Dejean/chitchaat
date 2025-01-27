@@ -3,7 +3,7 @@ import { createWorker, types as MediasoupTypes } from 'mediasoup';
 
 @Injectable()
 export class MediasoupService {
-  private worker: MediasoupTypes.Worker;
+  private worker: MediasoupTypes.Worker | undefined;
 
   constructor() {
     this.initWorker();
@@ -24,6 +24,9 @@ export class MediasoupService {
   }
 
   async createRouter() {
+    if (!this.worker) {
+      throw new Error('Mediasoup worker is not initialized');
+    }
     const mediaCodecs: MediasoupTypes.RtpCodecCapability[] = [
       {
         kind: 'audio',

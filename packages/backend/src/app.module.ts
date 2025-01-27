@@ -12,6 +12,7 @@ import { DisplayNameGeneratorService } from './display-name-generator/display-na
 import { TransportsService } from './transports/transports.service';
 import { ConsumersService } from './consumers/consumers.service';
 import { ProducersService } from './producers/producers.service';
+import { ClientsService } from './clients/clients.service';
 
 @Module({
   imports: [],
@@ -29,6 +30,7 @@ import { ProducersService } from './producers/producers.service';
     TransportsService,
     ConsumersService,
     ProducersService,
+    ClientsService,
   ],
 })
 export class AppModule {}

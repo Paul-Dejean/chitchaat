@@ -1,6 +1,7 @@
-import { Body, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
@@ -9,10 +10,29 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { RoomsService } from 'src/rooms/rooms.service';
 import { ConsumersService } from 'src/consumers/consumers.service';
 import { ProducersService } from 'src/producers/producers.service';
+import { RoomsService } from 'src/rooms/rooms.service';
 import { TransportsService } from 'src/transports/transports.service';
+import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe';
+import {
+  closeProducerSchema,
+  ConnectTransportDto,
+  connectTransportSchema,
+  CreateConsumerDto,
+  createConsumerSchema,
+  CreateProducerDto,
+  createProducerSchema,
+  CreateTransportDto,
+  createTransportSchema,
+  getRouterRtpCapabilitiesSchema,
+  JoinRoomDto,
+  joinRoomSchema,
+  pauseProducerSchema,
+  resumeConsumerSchema,
+  resumeProducerSchema,
+} from './mediasoup.schemas';
+import { ClientsService } from 'src/clients/clients.service';
 @WebSocketGateway({ cors: '*' })
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
@@ -23,6 +43,7 @@ export class MediasoupGateway
     private readonly consumersService: ConsumersService,
     private readonly producersService: ProducersService,
     private readonly transportsService: TransportsService,
+    private readonly clientsService: ClientsService,
   ) {}
 
   afterInit(server: Server) {
@@ -42,6 +63,7 @@ export class MediasoupGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    this.clientsService.addClient(client);
   }
 
   handleDisconnect(client: Socket) {
@@ -50,12 +72,14 @@ export class MediasoupGateway
     if (!room) return;
     this.roomService.deletePeer(room.id, client.id);
     this.server.to(room.id).emit('peerClosed', { peerId: client.id });
+    this.clientsService.removeClient(client);
   }
 
   @SubscribeMessage('joinRoom')
   async joinRoom(
     @ConnectedSocket() client: Socket,
-    @Body() { roomId }: { roomId: string },
+    @MessageBody(new ZodValidationPipe(joinRoomSchema))
+    { roomId }: JoinRoomDto,
   ) {
     await client.join(roomId);
     const { room, newPeer } = this.roomService.joinRoom(roomId, {
@@ -79,26 +103,13 @@ export class MediasoupGateway
   @SubscribeMessage('createTransport')
   async createTransport(
     @ConnectedSocket() client: Socket,
-    @Body() { roomId }: { roomId: string },
+    @MessageBody(new ZodValidationPipe(createTransportSchema))
+    { roomId }: CreateTransportDto,
   ) {
     const transport = await this.transportsService.createWebRtcTransport(
       roomId,
       client.id,
     );
-
-    transport.on('icestatechange', (iceState) => {
-      if (iceState === 'disconnected' || iceState === 'closed') {
-        client.disconnect();
-        console.log('iceStateChange failed - client deconnected', iceState);
-      }
-    });
-
-    transport.on('dtlsstatechange', (dtlsState) => {
-      if (dtlsState === 'failed' || dtlsState === 'closed') {
-        client.disconnect();
-        console.log('dtlsStateChange failed - client deconnected', dtlsState);
-      }
-    });
 
     return {
       id: transport.id,
@@ -109,7 +120,10 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('connectTransport')
-  async connect(@Body() { roomId, transportId, dtlsParameters }) {
+  async connectTransport(
+    @MessageBody(new ZodValidationPipe(connectTransportSchema))
+    { roomId, transportId, dtlsParameters }: ConnectTransportDto,
+  ) {
     console.log({ transportId, dtlsParameters });
     await this.transportsService.connectTransport(
       roomId,
@@ -119,9 +133,10 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('produce')
-  async produce(
+  async createProducer(
     @ConnectedSocket() client: Socket,
-    @Body() { roomId, transportId, kind, rtpParameters },
+    @MessageBody(new ZodValidationPipe(createProducerSchema))
+    { roomId, transportId, kind, rtpParameters }: CreateProducerDto,
   ) {
     const producer = await this.producersService.createProducer({
       peerId: client.id,
@@ -137,9 +152,10 @@ export class MediasoupGateway
   }
 
   @SubscribeMessage('consume')
-  async consume(
+  async createConsumer(
     @ConnectedSocket() client: Socket,
-    @Body() { roomId, producerId, rtpCapabilities, consumerId },
+    @MessageBody(new ZodValidationPipe(createConsumerSchema))
+    { roomId, producerId, rtpCapabilities, consumerId }: CreateConsumerDto,
   ) {
     const consumer = await this.consumersService.createConsumer({
       peerId: client.id,
@@ -158,7 +174,8 @@ export class MediasoupGateway
 
   @SubscribeMessage('resumeProducer')
   async resumeProducer(
-    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+    @MessageBody(new ZodValidationPipe(resumeProducerSchema))
+    { producerId, roomId }: { producerId: string; roomId: string },
   ) {
     await this.producersService.resumeProducer(roomId, producerId);
     this.server.to(roomId).emit('producerResumed', { producerId });
@@ -166,7 +183,8 @@ export class MediasoupGateway
 
   @SubscribeMessage('pauseProducer')
   async pauseProducer(
-    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+    @MessageBody(new ZodValidationPipe(pauseProducerSchema))
+    { producerId, roomId }: { producerId: string; roomId: string },
   ) {
     await this.producersService.pauseProducer(roomId, producerId);
     this.server.to(roomId).emit('producerPaused', { producerId });
@@ -175,7 +193,8 @@ export class MediasoupGateway
   @SubscribeMessage('closeProducer')
   async closeProducer(
     @ConnectedSocket() client: Socket,
-    @Body() { producerId, roomId }: { producerId: string; roomId: string },
+    @MessageBody(new ZodValidationPipe(closeProducerSchema))
+    { producerId, roomId }: { producerId: string; roomId: string },
   ) {
     await this.producersService.closeProducer(roomId, producerId);
     await this.roomService.deleteProducer(roomId, client.id, producerId);
@@ -184,13 +203,17 @@ export class MediasoupGateway
 
   @SubscribeMessage('resumeConsumer')
   async resumeConsumer(
-    @Body() { consumerId, roomId }: { consumerId: string; roomId: string },
+    @MessageBody(new ZodValidationPipe(resumeConsumerSchema))
+    { consumerId, roomId }: { consumerId: string; roomId: string },
   ) {
     await this.consumersService.resumeConsumer(roomId, consumerId);
     this.server.to(roomId).emit('consumerResumed', { consumerId });
   }
   @SubscribeMessage('getRouterRtpCapabilities')
-  async getRouterRtpCapabilities(@Body() { roomId }: { roomId: string }) {
+  async getRouterRtpCapabilities(
+    @MessageBody(new ZodValidationPipe(getRouterRtpCapabilitiesSchema))
+    { roomId }: { roomId: string },
+  ) {
     return {
       routerRtpCapabilities:
         await this.roomService.getRouterRtpCapabilities(roomId),

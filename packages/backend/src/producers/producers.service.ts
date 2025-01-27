@@ -37,16 +37,25 @@ export class ProducersService {
   }
   async pauseProducer(roomId: string, producerId: string) {
     const producer = this.roomsService.getProducerById(roomId, producerId);
+    if (!producer) {
+      throw new Error('Producer not found');
+    }
     await producer.pause();
   }
 
   async resumeProducer(roomId: string, producerId: string) {
     const producer = this.roomsService.getProducerById(roomId, producerId);
+    if (!producer) {
+      throw new Error('Producer not found');
+    }
     await producer.resume();
   }
 
   async closeProducer(roomId: string, producerId: string) {
     const producer = this.roomsService.getProducerById(roomId, producerId);
+    if (!producer) {
+      throw new Error('Producer not found');
+    }
     await producer.close();
   }
 }

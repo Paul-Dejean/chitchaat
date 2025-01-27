@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { types as MediasoupTypes } from 'mediasoup';
 import { DisplayNameGeneratorService } from 'src/display-name-generator/display-name-generator.service';
-import util from 'util';
-util.inspect.defaultOptions.depth = null;
 
 type Room = {
   id: string;
@@ -50,6 +48,9 @@ export class RoomsService {
 
   joinRoom(roomId: string, newPeer: { id: string }) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     if (room.peers.some((peer) => peer.id === newPeer.id)) {
       throw new Error('Peer has already joined the room');
     }
@@ -73,9 +74,11 @@ export class RoomsService {
 
   deletePeer(roomId: string, peerId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) return;
     if (room.isClosed) return;
 
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) return;
     peer.transports.forEach((transport) => transport.close());
     room.peers = room.peers.filter((peer) => peer.id !== peerId);
     if (room.peers.length === 0) {
@@ -86,6 +89,9 @@ export class RoomsService {
 
   getTransportById(roomId: string, transportId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     return room.peers
       .flatMap((peer) => peer.transports)
       .find((transport) => transport.id === transportId);
@@ -97,13 +103,22 @@ export class RoomsService {
     transport: MediasoupTypes.Transport,
   ) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
     peer.transports.push(transport);
     return transport;
   }
 
   getProducerById(roomId: string, producerId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     return room.peers
       .flatMap((peer) => peer.producers)
       .find((producer) => producer.id === producerId);
@@ -115,7 +130,13 @@ export class RoomsService {
     producer: MediasoupTypes.Producer,
   ) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
     peer.producers.push(producer);
 
     return producer;
@@ -123,7 +144,13 @@ export class RoomsService {
 
   deleteProducer(roomId: string, peerId: string, producerId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
     peer.producers = peer.producers.filter(
       (producer) => producer.id !== producerId,
     );
@@ -131,6 +158,9 @@ export class RoomsService {
 
   getConsumerById(roomId: string, consumerId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     return room.peers
       .flatMap((peer) => peer.consumers)
       .find((consumer) => consumer.id === consumerId);
@@ -142,14 +172,26 @@ export class RoomsService {
     consumer: MediasoupTypes.Consumer,
   ) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
     peer.consumers.push(consumer);
     return consumer;
   }
 
   deleteConsumer(roomId: string, peerId: string, consumerId: string) {
     const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
     peer.consumers = peer.consumers.filter(
       (consumer) => consumer.id !== consumerId,
     );
@@ -157,6 +199,9 @@ export class RoomsService {
 
   public async getRouterRtpCapabilities(roomId: string) {
     const room = await this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
     return room.router.rtpCapabilities;
   }
 }
