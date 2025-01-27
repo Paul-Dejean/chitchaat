@@ -3,38 +3,52 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomsService } from 'src/rooms/rooms.service';
-import { MediasoupService } from './mediasoup.service';
+import { ConsumersService } from 'src/consumers/consumers.service';
+import { ProducersService } from 'src/producers/producers.service';
+import { TransportsService } from 'src/transports/transports.service';
 @WebSocketGateway({ cors: '*' })
 export class MediasoupGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   private readonly logger = new Logger(MediasoupGateway.name);
   constructor(
-    private readonly mediasoupService: MediasoupService,
     private readonly roomService: RoomsService,
+    private readonly consumersService: ConsumersService,
+    private readonly producersService: ProducersService,
+    private readonly transportsService: TransportsService,
   ) {}
+
+  afterInit(server: Server) {
+    this.consumersService.on('producerClosed', ({ roomId, consumerId }) => {
+      server.to(roomId).emit('consumerClosed', { consumerId });
+    });
+    this.consumersService.on('producerPaused', ({ roomId, consumerId }) => {
+      server.to(roomId).emit('consumerPaused', { consumerId });
+    });
+    this.consumersService.on('producerResumed', ({ roomId, consumerId }) => {
+      server.to(roomId).emit('consumerResumed', { consumerId });
+    });
+  }
 
   @WebSocketServer()
   server: Server;
 
   handleConnection(client: Socket) {
-    client.onAny((event, args) => console.log({ event, args }));
     this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log('disconnected');
     this.logger.log(`Client disconnected: ${client.id}`);
     const room = this.roomService.getRoomByPeerId(client.id);
     if (!room) return;
     this.roomService.deletePeer(room.id, client.id);
-
     this.server.to(room.id).emit('peerClosed', { peerId: client.id });
   }
 
@@ -44,15 +58,14 @@ export class MediasoupGateway
     @Body() { roomId }: { roomId: string },
   ) {
     await client.join(roomId);
-    console.log({ socketId: client.id, roomId });
-    const room = this.roomService.joinRoom(roomId, {
+    const { room, newPeer } = this.roomService.joinRoom(roomId, {
       id: client.id,
     });
 
-    const newPeer = room.peers.find((peer) => peer.id === client.id);
     this.server
       .to(roomId)
       .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
+
     return {
       ...room,
       peers: room.peers.map((peer) => ({
@@ -68,7 +81,7 @@ export class MediasoupGateway
     @ConnectedSocket() client: Socket,
     @Body() { roomId }: { roomId: string },
   ) {
-    const transport = await this.mediasoupService.createWebRtcTransport(
+    const transport = await this.transportsService.createWebRtcTransport(
       roomId,
       client.id,
     );
@@ -98,7 +111,11 @@ export class MediasoupGateway
   @SubscribeMessage('connectTransport')
   async connect(@Body() { roomId, transportId, dtlsParameters }) {
     console.log({ transportId, dtlsParameters });
-    await this.mediasoupService.connect(roomId, transportId, dtlsParameters);
+    await this.transportsService.connectTransport(
+      roomId,
+      transportId,
+      dtlsParameters,
+    );
   }
 
   @SubscribeMessage('produce')
@@ -106,7 +123,7 @@ export class MediasoupGateway
     @ConnectedSocket() client: Socket,
     @Body() { roomId, transportId, kind, rtpParameters },
   ) {
-    const producer = await this.mediasoupService.produce({
+    const producer = await this.producersService.createProducer({
       peerId: client.id,
       roomId,
       transportId,
@@ -124,30 +141,14 @@ export class MediasoupGateway
     @ConnectedSocket() client: Socket,
     @Body() { roomId, producerId, rtpCapabilities, consumerId },
   ) {
-    const consumer = await this.mediasoupService.consume({
+    const consumer = await this.consumersService.createConsumer({
       peerId: client.id,
       roomId,
       consumerId,
       producerId,
       rtpCapabilities,
     });
-    consumer.on('producerclose', () => {
-      this.server
-        .to(roomId)
-        .emit('consumerClosed', { consumerId: consumer.id });
-    });
 
-    consumer.on('producerpause', () => {
-      this.server
-        .to(roomId)
-        .emit('consumerPaused', { consumerId: consumer.id });
-    });
-
-    consumer.on('producerresume', () => {
-      this.server
-        .to(roomId)
-        .emit('consumerResumed', { consumerId: consumer.id });
-    });
     return {
       kind: consumer.kind,
       rtpParameters: consumer.rtpParameters,
@@ -159,7 +160,7 @@ export class MediasoupGateway
   async resumeProducer(
     @Body() { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.mediasoupService.resumeProducer(roomId, producerId);
+    await this.producersService.resumeProducer(roomId, producerId);
     this.server.to(roomId).emit('producerResumed', { producerId });
   }
 
@@ -167,7 +168,7 @@ export class MediasoupGateway
   async pauseProducer(
     @Body() { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.mediasoupService.pauseProducer(roomId, producerId);
+    await this.producersService.pauseProducer(roomId, producerId);
     this.server.to(roomId).emit('producerPaused', { producerId });
   }
 
@@ -176,7 +177,7 @@ export class MediasoupGateway
     @ConnectedSocket() client: Socket,
     @Body() { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.mediasoupService.closeProducer(roomId, producerId);
+    await this.producersService.closeProducer(roomId, producerId);
     await this.roomService.deleteProducer(roomId, client.id, producerId);
     this.server.to(roomId).emit('producerClosed', { producerId });
   }
@@ -185,14 +186,14 @@ export class MediasoupGateway
   async resumeConsumer(
     @Body() { consumerId, roomId }: { consumerId: string; roomId: string },
   ) {
-    await this.mediasoupService.resumeConsumer(roomId, consumerId);
+    await this.consumersService.resumeConsumer(roomId, consumerId);
     this.server.to(roomId).emit('consumerResumed', { consumerId });
   }
   @SubscribeMessage('getRouterRtpCapabilities')
   async getRouterRtpCapabilities(@Body() { roomId }: { roomId: string }) {
     return {
       routerRtpCapabilities:
-        await this.mediasoupService.getRouterRtpCapabilities(roomId),
+        await this.roomService.getRouterRtpCapabilities(roomId),
     };
   }
 }

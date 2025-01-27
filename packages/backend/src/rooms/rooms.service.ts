@@ -57,15 +57,18 @@ export class RoomsService {
     while (room.peers.some((peer) => peer.displayName === displayName)) {
       displayName = this.displayNameGenerator.generateDisplayName();
     }
-    room.peers.push({
+
+    const peer = {
       id: newPeer.id,
       displayName,
       producers: [],
       consumers: [],
       transports: [],
-    });
+    };
 
-    return room;
+    room.peers.push(peer);
+
+    return { room, newPeer: peer };
   }
 
   deletePeer(roomId: string, peerId: string) {
@@ -150,5 +153,10 @@ export class RoomsService {
     peer.consumers = peer.consumers.filter(
       (consumer) => consumer.id !== consumerId,
     );
+  }
+
+  public async getRouterRtpCapabilities(roomId: string) {
+    const room = await this.getRoomById(roomId);
+    return room.router.rtpCapabilities;
   }
 }
