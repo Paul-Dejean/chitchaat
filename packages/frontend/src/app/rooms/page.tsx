@@ -22,8 +22,8 @@ export default function RoomPage() {
 
   return (
     <RoomProvider roomId={room.id}>
-      <div className="mx-8 h-screen flex flex-col justify-start">
-        <div className="pt-4 flex gap-x-4 items-center">
+      <div className="mx-8 h-screen max-h-screen flex flex-col justify-start">
+        <div className="pt-4 flex gap-x-4 items-center max-h-full">
           <div className="flex justify-between">
             <BiLogoBaidu
               className="text-primary bg-gray-800 rounded-full p-1"
@@ -42,7 +42,9 @@ export default function RoomPage() {
             </span>
           </div>
         </div>
-        <div className="mb-8 flex-1">{room && <VideoBoard></VideoBoard>}</div>
+        <div className="mb-8 flex-1 max-h-full">
+          {room && <VideoBoard></VideoBoard>}
+        </div>
       </div>
     </RoomProvider>
   );

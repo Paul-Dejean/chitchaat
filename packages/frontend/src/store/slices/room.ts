@@ -1,11 +1,10 @@
 import { RoomClientState } from "@/lib/RoomClient";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Producer } from "mediasoup-client/lib/types";
+import { DataConsumer } from "mediasoup-client/lib/types";
 
 type Peer = {
   id: string;
   displayName: string;
-  consumers: string[];
   isMe: boolean;
 };
 
@@ -23,7 +22,13 @@ const initialState = {
   isChatOpen: false,
   peers: {} as Record<string, Peer>,
   consumers: [] as Consumer[],
-  producers: [] as Producer[],
+  dataConsumers: [] as DataConsumer[],
+  messages: [] as {
+    isMe: boolean;
+    message: string;
+    timestamp: number;
+    sender: string;
+  }[],
 };
 
 export const roomSlice = createSlice({
@@ -111,12 +116,29 @@ export const roomSlice = createSlice({
       if (!consumer) return;
       consumer.isPaused = false;
     },
+    addDataConsumer: (
+      state,
+      action: PayloadAction<{ dataConsumer: DataConsumer }>
+    ) => {
+      state.dataConsumers.push(action.payload.dataConsumer);
+    },
     updateState: (state, action: PayloadAction<RoomClientState>) => {
       state.state = action.payload;
     },
     leaveRoom: (state) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       state = initialState;
+    },
+    addChatMessage: (
+      state,
+      action: PayloadAction<{
+        isMe: boolean;
+        message: string;
+        timestamp: number;
+        sender: string;
+      }>
+    ) => {
+      state.messages.push(action.payload);
     },
   },
 });

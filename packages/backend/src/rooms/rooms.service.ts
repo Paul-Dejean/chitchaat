@@ -15,6 +15,8 @@ type Peer = {
   producers: MediasoupTypes.Producer[];
   consumers: MediasoupTypes.Consumer[];
   transports: MediasoupTypes.Transport[];
+  dataProducers: MediasoupTypes.DataProducer[];
+  dataConsumers: MediasoupTypes.DataConsumer[];
 };
 @Injectable()
 export class RoomsService {
@@ -23,12 +25,14 @@ export class RoomsService {
   constructor(private displayNameGenerator: DisplayNameGeneratorService) {}
 
   getRoomById(roomId: string) {
-    return this.rooms.find((room) => room.id === roomId);
+    return this.rooms.find((room) => room.id === roomId) ?? null;
   }
 
   getRoomByPeerId(peerId: string) {
-    return this.rooms.find((room) =>
-      room.peers.some((peer) => peer.id === peerId),
+    return (
+      this.rooms.find((room) =>
+        room.peers.some((peer) => peer.id === peerId),
+      ) ?? null
     );
   }
 
@@ -65,6 +69,8 @@ export class RoomsService {
       producers: [],
       consumers: [],
       transports: [],
+      dataProducers: [],
+      dataConsumers: [],
     };
 
     room.peers.push(peer);
@@ -92,9 +98,11 @@ export class RoomsService {
     if (!room) {
       throw new Error('Room not found');
     }
-    return room.peers
-      .flatMap((peer) => peer.transports)
-      .find((transport) => transport.id === transportId);
+    return (
+      room.peers
+        .flatMap((peer) => peer.transports)
+        .find((transport) => transport.id === transportId) ?? null
+    );
   }
 
   addTransport(
@@ -119,9 +127,11 @@ export class RoomsService {
     if (!room) {
       throw new Error('Room not found');
     }
-    return room.peers
-      .flatMap((peer) => peer.producers)
-      .find((producer) => producer.id === producerId);
+    return (
+      room.peers
+        .flatMap((peer) => peer.producers)
+        .find((producer) => producer.id === producerId) ?? null
+    );
   }
 
   addProducer(
@@ -161,9 +171,11 @@ export class RoomsService {
     if (!room) {
       throw new Error('Room not found');
     }
-    return room.peers
-      .flatMap((peer) => peer.consumers)
-      .find((consumer) => consumer.id === consumerId);
+    return (
+      room.peers
+        .flatMap((peer) => peer.consumers)
+        .find((consumer) => consumer.id === consumerId) ?? null
+    );
   }
 
   addConsumer(
@@ -203,5 +215,75 @@ export class RoomsService {
       throw new Error('Room not found');
     }
     return room.router.rtpCapabilities;
+  }
+
+  public async addDataProducer(
+    roomId: string,
+    peerId: string,
+    dataProducer: MediasoupTypes.DataProducer,
+  ) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+    peer.dataProducers.push(dataProducer);
+    return dataProducer;
+  }
+
+  public async deleteDataProducer(
+    roomId: string,
+    peerId: string,
+    dataProducerId: string,
+  ) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+    peer.dataProducers = peer.dataProducers.filter(
+      (dataProducer) => dataProducer.id !== dataProducerId,
+    );
+  }
+
+  public async addDataConsumer(
+    roomId: string,
+    peerId: string,
+    dataConsumer: MediasoupTypes.DataConsumer,
+  ) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+    peer.dataConsumers.push(dataConsumer);
+    return dataConsumer;
+  }
+
+  public async deleteDataConsumer(
+    roomId: string,
+    peerId: string,
+    dataConsumerId: string,
+  ) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    const peer = room.peers.find((peer) => peer.id === peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+    peer.dataConsumers = peer.dataConsumers.filter(
+      (dataConsumer) => dataConsumer.id !== dataConsumerId,
+    );
   }
 }

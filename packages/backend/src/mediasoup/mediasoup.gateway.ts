@@ -34,6 +34,7 @@ import {
 } from './mediasoup.schemas';
 import { ClientsService } from 'src/clients/clients.service';
 import { WsExceptionFilter } from 'src/common/filters/ws-exception-filter/ws-exception-filter';
+import { DataProducersService } from 'src/data-producers/data-producers.service';
 @WebSocketGateway({ cors: '*' })
 @UseFilters(WsExceptionFilter)
 export class MediasoupGateway
@@ -46,6 +47,7 @@ export class MediasoupGateway
     private readonly producersService: ProducersService,
     private readonly transportsService: TransportsService,
     private readonly clientsService: ClientsService,
+    private readonly dataProducersService: DataProducersService,
   ) {}
 
   afterInit(server: Server) {
@@ -99,6 +101,9 @@ export class MediasoupGateway
         id: peer.id,
         displayName: peer.displayName,
         producers: peer.producers.map((producer) => ({ id: producer.id })),
+        dataProducers: peer.dataProducers.map((dataProducer) => ({
+          id: dataProducer.id,
+        })),
       })),
     };
   }
@@ -107,18 +112,23 @@ export class MediasoupGateway
   async createTransport(
     @ConnectedSocket() client: Socket,
     @MessageBody(new ZodValidationPipe(createTransportSchema))
-    { roomId }: CreateTransportDto,
+    { roomId, sctpCapabilities }: CreateTransportDto,
   ) {
+    console.log({ roomId, sctpCapabilities });
     const transport = await this.transportsService.createWebRtcTransport(
       roomId,
       client.id,
+      sctpCapabilities,
     );
+
+    console.log({ transport });
 
     return {
       id: transport.id,
       iceParameters: transport.iceParameters,
       iceCandidates: transport.iceCandidates,
       dtlsParameters: transport.dtlsParameters,
+      sctpParameters: transport.sctpParameters,
     };
   }
 
@@ -173,6 +183,50 @@ export class MediasoupGateway
       kind: consumer.kind,
       rtpParameters: consumer.rtpParameters,
       id: consumer.id,
+    };
+  }
+
+  @SubscribeMessage('createDataProducer')
+  async createDataProducer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    { roomId, transportId, sctpStreamParameters }: any,
+  ) {
+    const dataProducer = await this.dataProducersService.createDataProducer({
+      peerId: client.id,
+      roomId,
+      transportId,
+      sctpStreamParameters,
+    });
+    this.server.to(roomId).except(client.id).emit('newDataProducer', {
+      dataProducerId: dataProducer.id,
+      peerId: client.id,
+      sctpStreamParameters,
+    });
+    return { dataProducerId: dataProducer.id, transportId };
+  }
+  @SubscribeMessage('createDataConsumer')
+  async createDataConsumer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    {
+      roomId,
+      dataProducerId,
+      transportId,
+    }: { roomId: string; dataProducerId: string; transportId: string },
+  ) {
+    const dataConsumer = await this.dataProducersService.createDataConsumer({
+      roomId,
+      dataProducerId,
+      peerId: client.id,
+      transportId,
+    });
+
+    console.log({ dataConsumer });
+
+    return {
+      dataConsumerId: dataConsumer.id,
+      sctpStreamParameters: dataConsumer.sctpStreamParameters,
     };
   }
 

@@ -8,6 +8,7 @@ export type JoinRoomDto = z.infer<typeof joinRoomSchema>;
 
 export const createTransportSchema = z.object({
   roomId: z.string(),
+  sctpCapabilities: z.any(),
 });
 
 export type CreateTransportDto = z.infer<typeof createTransportSchema>;

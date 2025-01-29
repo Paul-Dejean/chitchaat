@@ -2,7 +2,13 @@
 "use client";
 import { Store } from "@/store";
 import { roomActions } from "@/store/slices/room";
-import { Consumer, Producer } from "mediasoup-client/lib/types";
+import {
+  Consumer,
+  DataConsumer,
+  DataProducer,
+  Producer,
+  SctpStreamParameters,
+} from "mediasoup-client/lib/types";
 import { MediasoupClient } from "./MediasoupClient";
 import { WsClient } from "./WsClient";
 
@@ -17,11 +23,13 @@ export class RoomClient {
   private wsClient: WsClient;
   private store: Store;
 
-  private microphoneProducer: Producer | undefined;
-  private videoProducer: Producer | undefined;
-  private desktopProducer: Producer | undefined;
+  private microphoneProducer: Producer | null = null;
+  private videoProducer: Producer | null = null;
+  private desktopProducer: Producer | null = null;
   private consumers: Consumer[] = [];
   private mediasoupClient: MediasoupClient;
+  private chatDataProducer: DataProducer | null = null;
+  private dataConsumers: DataConsumer[] = [];
 
   public state: RoomClientState = RoomClientState.NEW;
 
@@ -36,7 +44,7 @@ export class RoomClient {
 
   private initEventListeners() {
     this.wsClient.registerHandler("disconnect", () => {
-      console.error("Disconnected from server");
+      console.info("Disconnected from server");
       this.leaveRoom();
     });
 
@@ -45,40 +53,6 @@ export class RoomClient {
       this.leaveRoom();
     });
 
-    this.wsClient.registerHandler(
-      "newProducer",
-      async (peer: { producerId: string; peerId: string }) => {
-        if (
-          this.consumers.find(
-            (consumer) => consumer.producerId === peer.producerId
-          )
-        ) {
-          return;
-        }
-
-        const consumer = await this.mediasoupClient.createConsumer(
-          peer.producerId
-        );
-
-        this.consumers.push(consumer);
-        console.log("this.consumers", this.consumers);
-        this.store.dispatch(
-          roomActions.addConsumer({
-            consumer: {
-              id: consumer.id,
-              track: consumer.track,
-              peerId: peer.peerId,
-              isPaused: consumer.paused,
-            },
-          })
-        );
-
-        await this.mediasoupClient.resumeConsumer(consumer.id);
-        this.store.dispatch(
-          roomActions.resumeConsumer({ consumerId: consumer.id })
-        );
-      }
-    );
     this.wsClient.registerHandler("consumerClosed", ({ consumerId }) => {
       const consumer = this.consumers.find(
         (consumer) => consumer.id === consumerId
@@ -105,14 +79,6 @@ export class RoomClient {
       this.store.dispatch(roomActions.resumeConsumer({ consumerId }));
     });
 
-    this.wsClient.registerHandler("producerPaused", ({ producerId }) => {
-      if (producerId === this.microphoneProducer?.id) {
-        this.store.dispatch(
-          roomActions.toggleAudio({ shouldEnableAudio: false })
-        );
-      }
-    });
-
     this.wsClient.registerHandler("producerResumed", ({ producerId }) => {
       if (producerId === this.microphoneProducer?.id) {
         this.store.dispatch(
@@ -122,12 +88,19 @@ export class RoomClient {
     });
 
     this.wsClient.registerHandler(
+      "peerClosed",
+      async ({ peerId }: { peerId: string }) => {
+        this.store.dispatch(roomActions.removePeer({ peerId }));
+      }
+    );
+
+    this.wsClient.registerHandler(
       "newPeer",
       async (newPeer: { id: string; displayName: string }) => {
         this.store.dispatch(
           roomActions.addPeer({
             ...newPeer,
-            consumers: [],
+
             isMe: newPeer.id === this.wsClient.id,
           })
         );
@@ -135,9 +108,81 @@ export class RoomClient {
     );
 
     this.wsClient.registerHandler(
-      "peerClosed",
-      async ({ peerId }: { peerId: string }) => {
-        this.store.dispatch(roomActions.removePeer({ peerId }));
+      "newProducer",
+      async ({
+        producerId,
+        peerId,
+      }: {
+        producerId: string;
+        peerId: string;
+      }) => {
+        if (
+          this.consumers.find((consumer) => consumer.producerId === producerId)
+        ) {
+          return;
+        }
+
+        const consumer = await this.mediasoupClient.createConsumer(producerId);
+
+        this.consumers.push(consumer);
+        console.log("this.consumers", this.consumers);
+        this.store.dispatch(
+          roomActions.addConsumer({
+            consumer: {
+              id: consumer.id,
+              track: consumer.track,
+              peerId,
+              isPaused: consumer.paused,
+            },
+          })
+        );
+
+        await this.mediasoupClient.resumeConsumer(consumer.id);
+        this.store.dispatch(
+          roomActions.resumeConsumer({ consumerId: consumer.id })
+        );
+      }
+    );
+
+    this.wsClient.registerHandler(
+      "newDataProducer",
+      async ({
+        dataProducerId,
+        peerId,
+        sctpStreamParameters,
+      }: {
+        dataProducerId: string;
+        peerId: string;
+        sctpStreamParameters: SctpStreamParameters;
+      }) => {
+        console.log("newDataProducer", {
+          dataProducerId,
+          sctpStreamParameters,
+          peerId,
+        });
+        const dataConsumer = await this.mediasoupClient.createDataConsumer({
+          dataProducerId,
+        });
+
+        dataConsumer.on("message", (data) => {
+          console.log("received message", { data });
+          const { message, timestamp, sender } = JSON.parse(data);
+          this.store.dispatch(
+            roomActions.addChatMessage({
+              message,
+              isMe: false,
+              timestamp,
+              sender,
+            })
+          );
+        });
+
+        this.dataConsumers.push(dataConsumer);
+        this.store.dispatch(
+          roomActions.addDataConsumer({
+            dataConsumer,
+          })
+        );
       }
     );
   }
@@ -152,7 +197,12 @@ export class RoomClient {
     const room = (await this.wsClient.emitMessage("joinRoom", {
       roomId,
     })) as {
-      peers: { id: string; displayName: string; producers: Producer[] }[];
+      peers: {
+        id: string;
+        displayName: string;
+        producers: Producer[];
+        dataProducers: DataProducer[];
+      }[];
     };
 
     await this.mediasoupClient.initDevice(roomId);
@@ -166,7 +216,6 @@ export class RoomClient {
         roomActions.addPeer({
           id: peer.id,
           displayName: peer.displayName,
-          consumers: [],
           isMe: peer.id === this.wsClient.id,
         })
       );
@@ -193,6 +242,29 @@ export class RoomClient {
           await this.mediasoupClient.resumeConsumer(consumer.id);
           this.store.dispatch(
             roomActions.resumeConsumer({ consumerId: consumer.id })
+          );
+        }
+        for (const dataProducer of peer.dataProducers) {
+          const dataConsumer = await this.mediasoupClient.createDataConsumer({
+            dataProducerId: dataProducer.id,
+          });
+          dataConsumer.on("message", (data) => {
+            console.log("received message", { data });
+            const { message, timestamp, sender } = JSON.parse(data);
+            this.store.dispatch(
+              roomActions.addChatMessage({
+                message,
+                isMe: false,
+                timestamp,
+                sender,
+              })
+            );
+          });
+          this.dataConsumers.push(dataConsumer);
+          this.store.dispatch(
+            roomActions.addDataConsumer({
+              dataConsumer,
+            })
           );
         }
       }
@@ -224,7 +296,7 @@ export class RoomClient {
     if (this.videoProducer) {
       this.videoProducer.close();
       this.mediasoupClient.closeProducer(this.videoProducer.id);
-      this.videoProducer = undefined;
+      this.videoProducer = null;
     }
   }
 
@@ -249,7 +321,7 @@ export class RoomClient {
     if (this.desktopProducer) {
       this.desktopProducer.close();
       this.mediasoupClient.closeProducer(this.desktopProducer.id);
-      this.desktopProducer = undefined;
+      this.desktopProducer = null;
     }
   }
 
@@ -267,6 +339,40 @@ export class RoomClient {
   async disableMicrophone() {
     if (this.microphoneProducer) {
       await this.mediasoupClient.pauseProducer(this.microphoneProducer.id);
+      this.store.dispatch(
+        roomActions.toggleAudio({ shouldEnableAudio: false })
+      );
     }
+  }
+
+  async enableChatDataProducer() {
+    if (this.chatDataProducer) {
+      return;
+    }
+    this.chatDataProducer = await this.mediasoupClient.createDataProducer();
+    console.log({ chatDataProducer: this.chatDataProducer });
+  }
+
+  async sendChatMessage(message: string) {
+    if (!this.chatDataProducer) {
+      throw new Error("Chat data producer not enabled");
+    }
+    console.log("sending message", message);
+
+    this.chatDataProducer.send(
+      JSON.stringify({
+        message,
+        timestamp: Date.now(),
+        sender: this.wsClient.id,
+      })
+    );
+    this.store.dispatch(
+      roomActions.addChatMessage({
+        message,
+        isMe: true,
+        timestamp: Date.now(),
+        sender: this.wsClient.id!,
+      })
+    );
   }
 }

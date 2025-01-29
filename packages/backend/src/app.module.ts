@@ -14,6 +14,7 @@ import { ConsumersService } from './consumers/consumers.service';
 import { ProducersService } from './producers/producers.service';
 import { ClientsService } from './clients/clients.service';
 import { WsExceptionFilter } from './common/filters/ws-exception-filter/ws-exception-filter';
+import { DataProducersService } from './data-producers/data-producers.service';
 
 @Module({
   imports: [],
@@ -33,6 +34,7 @@ import { WsExceptionFilter } from './common/filters/ws-exception-filter/ws-excep
     ProducersService,
     ClientsService,
     WsExceptionFilter,
+    DataProducersService,
   ],
 })
 export class AppModule {}

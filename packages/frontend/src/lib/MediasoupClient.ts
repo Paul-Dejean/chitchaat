@@ -5,6 +5,8 @@ import {
   IceParameters,
   RtpCapabilities,
   RtpParameters,
+  SctpParameters,
+  SctpStreamParameters,
   Transport,
 } from "mediasoup-client/lib/types";
 import { WsClient } from "./WsClient";
@@ -14,14 +16,15 @@ type TransportConnection = {
   iceParameters: IceParameters;
   iceCandidates: IceCandidate[];
   dtlsParameters: DtlsParameters;
+  sctpParameters: SctpParameters;
 };
 
 export class MediasoupClient {
-  device: Device | undefined;
-  recvTransport: Transport | undefined;
-  sendTransport: Transport | undefined;
+  device: Device | null = null;
+  recvTransport: Transport | null = null;
+  sendTransport: Transport | null = null;
+  roomId: string | null = null;
 
-  roomId: string | undefined;
   constructor(private wsClient: WsClient) {}
 
   async initDevice(roomId: string) {
@@ -93,12 +96,13 @@ export class MediasoupClient {
       return producer;
     } catch (error) {
       console.error("Failed to produce", error);
+      return null;
     }
   }
 
   public async initTransports() {
-    this.recvTransport = await this.createConsumerTransport();
     this.sendTransport = await this.createProducerTransport();
+    this.recvTransport = await this.createConsumerTransport();
   }
 
   public async closeProducer(producerId: string) {
@@ -141,6 +145,48 @@ export class MediasoupClient {
     this.sendTransport?.close();
   }
 
+  public async createDataProducer() {
+    if (!this.sendTransport) {
+      throw new Error("sendTransport not instanciated");
+    }
+    const dataProducer = await this.sendTransport.produceData({
+      ordered: false,
+      maxRetransmits: 1,
+      label: "chat",
+      appData: { info: "my-chat-DataProducer" },
+    });
+    return dataProducer;
+  }
+
+  public async createDataConsumer({
+    dataProducerId,
+  }: {
+    dataProducerId: string;
+  }) {
+    if (!this.recvTransport) {
+      throw new Error("recvTransport not instanciated");
+    }
+    const { dataConsumerId, sctpStreamParameters } =
+      await this.wsClient.emitMessage<{
+        dataConsumerId: string;
+        sctpStreamParameters: SctpStreamParameters;
+      }>("createDataConsumer", {
+        roomId: this.roomId,
+        dataProducerId,
+        transportId: this.recvTransport.id,
+      });
+
+    console.log({ dataConsumerId, sctpStreamParameters });
+
+    const dataConsumer = await this.recvTransport.consumeData({
+      id: dataConsumerId,
+      dataProducerId,
+      sctpStreamParameters,
+    });
+
+    return dataConsumer;
+  }
+
   private async createProducerTransport() {
     if (!this.device) {
       throw new Error("Device not instanciated");
@@ -150,16 +196,26 @@ export class MediasoupClient {
       throw new Error("RoomId not set");
     }
 
-    const { id, iceParameters, iceCandidates, dtlsParameters } =
+    const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters } =
       await this.wsClient.emitMessage<TransportConnection>("createTransport", {
         roomId: this.roomId,
+        sctpCapabilities: this.device.sctpCapabilities,
       });
+
+    console.log({
+      id,
+      iceParameters,
+      iceCandidates,
+      dtlsParameters,
+      sctpParameters,
+    });
 
     const producerTransport = this.device.createSendTransport({
       id,
       iceParameters,
       iceCandidates,
       dtlsParameters,
+      sctpParameters,
     });
 
     producerTransport.on("connect", async ({ dtlsParameters }, callback) => {
@@ -186,6 +242,20 @@ export class MediasoupClient {
       }
     );
 
+    producerTransport.on(
+      "producedata",
+      async ({ sctpStreamParameters }, callback) => {
+        const { dataProducerId } = await this.wsClient.emitMessage<{
+          dataProducerId: string;
+        }>("createDataProducer", {
+          roomId: this.roomId,
+          transportId: producerTransport.id,
+          sctpStreamParameters,
+        });
+        callback({ id: dataProducerId });
+      }
+    );
+
     return producerTransport;
   }
 
@@ -193,9 +263,10 @@ export class MediasoupClient {
     if (!this.device) {
       throw new Error("Device not instanciated");
     }
-    const { id, iceParameters, iceCandidates, dtlsParameters } =
+    const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters } =
       await this.wsClient.emitMessage<TransportConnection>("createTransport", {
         roomId: this.roomId,
+        sctpCapabilities: this.device.sctpCapabilities,
       });
 
     const consumerTransport = this.device.createRecvTransport({
@@ -203,6 +274,7 @@ export class MediasoupClient {
       iceParameters,
       iceCandidates,
       dtlsParameters,
+      sctpParameters,
     });
 
     consumerTransport.on("connect", async ({ dtlsParameters }, callback) => {

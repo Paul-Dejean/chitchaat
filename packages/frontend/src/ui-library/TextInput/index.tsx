@@ -5,5 +5,5 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export function TextInput({ ...props }: InputProps) {
-  return <input className="px-2" {...props} />;
+  return <input className="px-2 border-sky-700 border rounded-lg" {...props} />;
 }

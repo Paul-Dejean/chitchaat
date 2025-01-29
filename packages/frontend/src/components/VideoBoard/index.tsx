@@ -130,7 +130,8 @@ export function VideoBoard() {
     }
   }
 
-  function onToggleChatClick() {
+  async function onToggleChatClick() {
+    await roomClient.enableChatDataProducer();
     if (!roomState.isChatOpen) {
       dispatch(roomActions.toggleChat({ shouldOpenChat: true }));
     } else {
@@ -139,8 +140,8 @@ export function VideoBoard() {
   }
 
   return (
-    <div className="flex flex-col h-full mt-4 gap-4">
-      <div className="flex gap-x-4 flex-1">
+    <div className="flex flex-col h-full max-h-full mt-4 gap-4">
+      <div className="flex gap-x-4 flex-1 max-h-full">
         <div className="w-full h-full">
           <Peer
             videoTrack={currentTrack}
@@ -162,8 +163,9 @@ export function VideoBoard() {
             </div>
           )
         )}
-
-        <Chat isOpen={isChatOpen} />
+        <div className="max-h-full">
+          <Chat isOpen={isChatOpen} />
+        </div>
       </div>
 
       <div className="p-4 flex gap-x-2 justify-center w-full">
