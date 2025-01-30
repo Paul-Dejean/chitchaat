@@ -43,11 +43,11 @@ export function Peer({
   });
 
   return (
-    <div className="relative h-full ">
-      {audioTrack && <audio className="h-full" ref={audioRef} autoPlay />}
+    <div className="h-full w-full max-h-full flex justify-center items-center">
+      {audioTrack && <audio ref={audioRef} autoPlay />}
       {videoTrack ? (
         <video
-          className="h-full rounded-lg w-full object-cover"
+          className="h-full rounded-lg  object-cover"
           ref={videoRef}
           autoPlay
           muted

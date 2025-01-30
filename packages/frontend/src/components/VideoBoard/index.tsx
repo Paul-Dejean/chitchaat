@@ -22,6 +22,26 @@ import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 import { Chat } from "../Chat";
 
+function getVideoHeight(nbParticipants: number) {
+  if (nbParticipants <= 2) {
+    return "h-full";
+  }
+  if (nbParticipants <= 6) {
+    return "h-1/2";
+  }
+  return "h-1/3";
+}
+
+function getVideoWidth(nbParticipants: number) {
+  if (nbParticipants === 1) {
+    return "w-full";
+  }
+  if (nbParticipants <= 4) {
+    return "w-1/2";
+  }
+  return "w-1/3";
+}
+
 export function VideoBoard() {
   const roomClient = useRoomClient();
   const roomState = useSelector((state) => state.room);
@@ -139,35 +159,57 @@ export function VideoBoard() {
     }
   }
 
+  const nbParticipants = allPeers.length + 1;
+  const videoHeight = getVideoHeight(nbParticipants);
+  const videoWidth = getVideoWidth(nbParticipants);
+
   return (
     <div className="flex flex-col h-full mt-4 gap-4">
-      <div className="flex gap-x-4 flex-1">
-        <div className="w-full h-full">
-          <Peer
-            videoTrack={currentTrack}
-            isMicrophoneEnabled={roomState.isAudioEnabled}
-            displayName={"me"}
-            isMe={true}
-          />
-        </div>
-        {allPeers.map(
-          ({ audioTrack, videoTrack, id, displayName, isAudioPaused }) => (
-            <div key={id} className="w-full h-full">
-              <Peer
-                audioTrack={audioTrack}
-                videoTrack={videoTrack}
-                displayName={displayName}
-                isMicrophoneEnabled={!isAudioPaused}
-                isMe={false}
-              />
+      <div className="flex flex-1">
+        <div className="relative h-full flex-1 overflow-auto">
+          <div className="absolute inset-0">
+            <div className="flex justify-center flex-wrap h-full w-full overflow-auto items-center">
+              <div
+                className={`flex justify-center items-center ${videoHeight} ${videoWidth}  p-2`}
+              >
+                <Peer
+                  videoTrack={currentTrack}
+                  isMicrophoneEnabled={roomState.isAudioEnabled}
+                  displayName={"me"}
+                  isMe={true}
+                />
+              </div>
+              {allPeers.map(
+                ({
+                  audioTrack,
+                  videoTrack,
+                  id,
+                  displayName,
+                  isAudioPaused,
+                }) => (
+                  <div
+                    key={id}
+                    className={` flex justify-center items-center ${videoHeight} ${videoWidth}  p-2`}
+                  >
+                    <Peer
+                      audioTrack={audioTrack}
+                      videoTrack={videoTrack}
+                      displayName={displayName}
+                      isMicrophoneEnabled={!isAudioPaused}
+                      isMe={false}
+                    />
+                  </div>
+                )
+              )}
             </div>
-          )
-        )}
-
-        <Chat isOpen={isChatOpen} />
+          </div>
+        </div>
+        <div className="p-2">
+          <Chat isOpen={isChatOpen} />
+        </div>
       </div>
 
-      <div className="p-4 flex gap-x-2 justify-center w-full">
+      <div className="p-4 flex gap-x-2 justify-center w-full shrink-0">
         <IconButton
           icon={
             roomState.isAudioEnabled ? (
