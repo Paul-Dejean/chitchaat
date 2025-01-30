@@ -240,6 +240,7 @@ export class MediasoupGateway
   ) {
     await this.producersService.resumeProducer(roomId, producerId);
     this.server.to(roomId).emit('producerResumed', { producerId });
+    return true;
   }
 
   @SubscribeMessage('pauseProducer')
@@ -249,6 +250,7 @@ export class MediasoupGateway
   ) {
     await this.producersService.pauseProducer(roomId, producerId);
     this.server.to(roomId).emit('producerPaused', { producerId });
+    return true;
   }
 
   @SubscribeMessage('closeProducer')
@@ -260,6 +262,7 @@ export class MediasoupGateway
     await this.producersService.closeProducer(roomId, producerId);
     await this.roomService.deleteProducer(roomId, client.id, producerId);
     this.server.to(roomId).emit('producerClosed', { producerId });
+    return true;
   }
 
   @SubscribeMessage('resumeConsumer')
@@ -269,6 +272,7 @@ export class MediasoupGateway
   ) {
     await this.consumersService.resumeConsumer(roomId, consumerId);
     this.server.to(roomId).emit('consumerResumed', { consumerId });
+    return true;
   }
   @SubscribeMessage('getRouterRtpCapabilities')
   async getRouterRtpCapabilities(
