@@ -30,6 +30,7 @@ export class RoomClient {
   private mediasoupClient: MediasoupClient;
   private chatDataProducer: DataProducer | null = null;
   private dataConsumers: DataConsumer[] = [];
+  private displayName: string | null = null;
 
   public state: RoomClientState = RoomClientState.NEW;
 
@@ -194,16 +195,21 @@ export class RoomClient {
     await this.wsClient.connect();
     this.initEventListeners();
 
-    const room = (await this.wsClient.emitMessage("joinRoom", {
+    const { room, displayName } = (await this.wsClient.emitMessage("joinRoom", {
       roomId,
     })) as {
-      peers: {
-        id: string;
-        displayName: string;
-        producers: Producer[];
-        dataProducers: DataProducer[];
-      }[];
+      room: {
+        peers: {
+          id: string;
+          displayName: string;
+          producers: Producer[];
+          dataProducers: DataProducer[];
+        }[];
+      };
+      displayName: string;
     };
+
+    this.displayName = displayName;
 
     await this.mediasoupClient.initDevice(roomId);
     await this.mediasoupClient.initTransports();
@@ -363,7 +369,7 @@ export class RoomClient {
       JSON.stringify({
         message,
         timestamp: Date.now(),
-        sender: this.wsClient.id,
+        sender: this.displayName!,
       })
     );
     this.store.dispatch(
@@ -371,7 +377,7 @@ export class RoomClient {
         message,
         isMe: true,
         timestamp: Date.now(),
-        sender: this.wsClient.id!,
+        sender: this.displayName!,
       })
     );
   }

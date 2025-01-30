@@ -140,8 +140,8 @@ export function VideoBoard() {
   }
 
   return (
-    <div className="flex flex-col h-full max-h-full mt-4 gap-4">
-      <div className="flex gap-x-4 flex-1 max-h-full">
+    <div className="flex flex-col h-full mt-4 gap-4">
+      <div className="flex gap-x-4 flex-1">
         <div className="w-full h-full">
           <Peer
             videoTrack={currentTrack}
@@ -163,9 +163,8 @@ export function VideoBoard() {
             </div>
           )
         )}
-        <div className="max-h-full">
-          <Chat isOpen={isChatOpen} />
-        </div>
+
+        <Chat isOpen={isChatOpen} />
       </div>
 
       <div className="p-4 flex gap-x-2 justify-center w-full">

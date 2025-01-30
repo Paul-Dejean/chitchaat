@@ -96,15 +96,18 @@ export class MediasoupGateway
       .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
 
     return {
-      ...room,
-      peers: room.peers.map((peer) => ({
-        id: peer.id,
-        displayName: peer.displayName,
-        producers: peer.producers.map((producer) => ({ id: producer.id })),
-        dataProducers: peer.dataProducers.map((dataProducer) => ({
-          id: dataProducer.id,
+      room: {
+        ...room,
+        peers: room.peers.map((peer) => ({
+          id: peer.id,
+          displayName: peer.displayName,
+          producers: peer.producers.map((producer) => ({ id: producer.id })),
+          dataProducers: peer.dataProducers.map((dataProducer) => ({
+            id: dataProducer.id,
+          })),
         })),
-      })),
+      },
+      displayName: newPeer.displayName,
     };
   }
 

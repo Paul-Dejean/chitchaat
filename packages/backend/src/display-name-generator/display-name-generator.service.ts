@@ -536,7 +536,7 @@ export class DisplayNameGeneratorService {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' ');
-    const number = Math.floor(Math.random() * 100);
-    return `${formattedAnimalName} ${number}`;
+
+    return formattedAnimalName;
   }
 }
