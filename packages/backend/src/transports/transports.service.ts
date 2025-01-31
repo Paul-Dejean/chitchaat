@@ -17,6 +17,17 @@ export class TransportsService {
     sctpCapabilites?: SctpCapabilities,
   ) {
     const { listenInfos, initialAvailableOutgoingBitrate } = {
+      // listenIps: [
+      //   {
+      //     ip: '0.0.0.0',
+      //     announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V4 ?? '127.0.0.1',
+      //   },
+      //   {
+      //     // For IPv6
+      //     ip: '::',
+      //     announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V6 ?? '::1',
+      //   },
+      // ],
       listenInfos: [
         {
           ip: '::',
