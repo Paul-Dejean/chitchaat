@@ -21,6 +21,9 @@ import { useRouter } from "next/navigation";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 import { Chat } from "../Chat";
+import { IoMdPerson } from "react-icons/io";
+import { Modal } from "@/ui-library/Modal";
+import { InviteGuest } from "../InviteGuest";
 
 function getVideoHeight(nbParticipants: number) {
   if (nbParticipants <= 2) {
@@ -49,6 +52,14 @@ export function VideoBoard() {
   const consumers = useSelector((state) => state.room.consumers);
   const isChatOpen = useSelector((state) => state.room.isChatOpen);
   console.log({ consumers });
+  const [isModalOpen, setModalOpen] = useState(false);
+
+  async function onSendEmailClick(email: string) {
+    console.log({ email });
+    if (!email) return;
+    //await sendInvitationEmail(email, url);
+    setModalOpen(false);
+  }
 
   const allPeers = Object.values(peers)
     .filter((peer) => !peer.isMe)
@@ -164,13 +175,13 @@ export function VideoBoard() {
   const videoWidth = getVideoWidth(nbParticipants);
 
   return (
-    <div className="flex flex-col h-full mt-4 gap-4">
+    <div className="flex flex-col mt-2 h-full gap-4">
       <div className="flex flex-1">
-        <div className="relative h-full flex-1 overflow-auto">
+        <div className="relative h-full flex-1 overflow-auto w-full">
           <div className="absolute inset-0">
             <div className="flex justify-center flex-wrap h-full w-full overflow-auto items-center">
               <div
-                className={`flex justify-center items-center ${videoHeight} ${videoWidth}  p-2`}
+                className={`flex justify-center items-center ${videoHeight} ${videoWidth} p-2`}
               >
                 <Peer
                   videoTrack={currentTrack}
@@ -189,7 +200,7 @@ export function VideoBoard() {
                 }) => (
                   <div
                     key={id}
-                    className={` flex justify-center items-center ${videoHeight} ${videoWidth}  p-2`}
+                    className={` flex justify-center items-center ${videoHeight} ${videoWidth} p-2`}
                   >
                     <Peer
                       audioTrack={audioTrack}
@@ -204,65 +215,85 @@ export function VideoBoard() {
             </div>
           </div>
         </div>
-        <div className="p-2">
+        <div className="py-2">
           <Chat isOpen={isChatOpen} />
         </div>
       </div>
-
-      <div className="p-4 flex gap-x-2 justify-center w-full shrink-0">
-        <IconButton
-          icon={
-            roomState.isAudioEnabled ? (
-              <BiMicrophone size={20} />
-            ) : (
-              <BiMicrophoneOff size={20} />
-            )
-          }
-          aria-label="Toggle Microphone"
-          className={`${!roomState.isAudioEnabled && "bg-red-500"}`}
-          onClick={() => {
-            onToggleAudioClick();
-          }}
-        />
-        <IconButton
-          icon={
-            roomState.isVideoEnabled ? (
-              <IoVideocamOutline size={20} />
-            ) : (
-              <IoVideocamOffOutline size={20} />
-            )
-          }
-          aria-label="Toggle Video"
-          className={`${!roomState.isVideoEnabled && "bg-red-500"}`}
-          onClick={() => {
-            onToggleVideoClick();
-          }}
-        />
-        <Button
-          className="bg-red-500 rounded-full text-white py-2 px-8"
-          onClick={() => {
-            onEndCallClick();
-          }}
-        >
-          End Call
-        </Button>
-        <IconButton
-          icon={<TbDeviceDesktopShare size={20} />}
-          aria-label="Share Desktop"
-          className={`${!roomState.isScreenSharingEnabled && "bg-red-500"}`}
-          onClick={() => {
-            onToggleShareDesktopClick();
-          }}
-        />
-        <IconButton
-          icon={<IoChatbubbleEllipsesOutline size={20} />}
-          className={`${!roomState.isChatOpen && "bg-red-500"}`}
-          aria-label="Toggle Chat"
-          onClick={() => {
-            onToggleChatClick();
-          }}
-        />
+      <div className="relative">
+        <div className="p-4 flex gap-x-2 justify-center shrink-0">
+          <IconButton
+            icon={
+              roomState.isAudioEnabled ? (
+                <BiMicrophone size={20} />
+              ) : (
+                <BiMicrophoneOff size={20} />
+              )
+            }
+            aria-label="Toggle Microphone"
+            className={`${!roomState.isAudioEnabled && "bg-red-500"}`}
+            onClick={() => {
+              onToggleAudioClick();
+            }}
+          />
+          <IconButton
+            icon={
+              roomState.isVideoEnabled ? (
+                <IoVideocamOutline size={20} />
+              ) : (
+                <IoVideocamOffOutline size={20} />
+              )
+            }
+            aria-label="Toggle Video"
+            className={`${!roomState.isVideoEnabled && "bg-red-500"}`}
+            onClick={() => {
+              onToggleVideoClick();
+            }}
+          />
+          <Button
+            className="bg-red-500 rounded-full text-white py-2 px-8"
+            onClick={() => {
+              onEndCallClick();
+            }}
+          >
+            End Call
+          </Button>
+          <IconButton
+            icon={<TbDeviceDesktopShare size={20} />}
+            aria-label="Share Desktop"
+            className={`${!roomState.isScreenSharingEnabled && "bg-red-500"}`}
+            onClick={() => {
+              onToggleShareDesktopClick();
+            }}
+          />
+          <IconButton
+            icon={<IoChatbubbleEllipsesOutline size={20} />}
+            className={`${!roomState.isChatOpen && "bg-red-500"}`}
+            aria-label="Toggle Chat"
+            onClick={() => {
+              onToggleChatClick();
+            }}
+          />
+        </div>
+        <div className="absolute right-2 top-0 flex gap-x-4 items-center">
+          <span className="text-white flex items-center">
+            <IoMdPerson /> : {Object.keys(peers).length}
+          </span>
+          <Button
+            className="bg-white rounded-lg p-4"
+            onClick={() => {
+              setModalOpen(true);
+            }}
+          >
+            Invite Guests
+          </Button>
+        </div>
       </div>
+      <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
+        <InviteGuest
+          url={window.location.href}
+          onSendEmailClick={onSendEmailClick}
+        ></InviteGuest>
+      </Modal>
     </div>
   );
 }

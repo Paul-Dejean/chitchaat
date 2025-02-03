@@ -17,7 +17,9 @@ export function Chat({ isOpen }: { isOpen: boolean }) {
   return (
     <div
       className={`bg-white rounded-lg transition-all duration-200 h-full relative flex-shrink-0 ${
-        isOpen ? "w-[250px]" : "w-0 overflow-hidden delay-200 bg-background"
+        isOpen
+          ? "w-[250px] ml-2"
+          : "w-0 overflow-hidden delay-200 bg-background"
       }`}
     >
       <div className={`absolute inset-0`}>

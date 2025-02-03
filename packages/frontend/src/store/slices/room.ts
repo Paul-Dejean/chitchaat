@@ -125,9 +125,8 @@ export const roomSlice = createSlice({
     updateState: (state, action: PayloadAction<RoomClientState>) => {
       state.state = action.payload;
     },
-    leaveRoom: (state) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      state = initialState;
+    leaveRoom: () => {
+      return initialState;
     },
     addChatMessage: (
       state,
