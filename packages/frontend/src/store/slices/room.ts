@@ -16,8 +16,8 @@ type Consumer = {
 };
 const initialState = {
   state: RoomClientState.NEW,
-  isVideoEnabled: false,
-  isAudioEnabled: false,
+  isCameraEnabled: false,
+  isMicrophoneEnabled: false,
   isScreenSharingEnabled: false,
   isChatOpen: false,
   peers: {} as Record<string, Peer>,
@@ -40,20 +40,20 @@ export const roomSlice = createSlice({
       action: PayloadAction<{ shouldEnableVideo: boolean }>
     ) => {
       console.log(action);
-      if (action.payload.shouldEnableVideo === state.isVideoEnabled) {
+      if (action.payload.shouldEnableVideo === state.isCameraEnabled) {
         return;
       }
-      state.isVideoEnabled = action.payload.shouldEnableVideo;
+      state.isCameraEnabled = action.payload.shouldEnableVideo;
     },
     toggleAudio: (
       state,
       action: PayloadAction<{ shouldEnableAudio: boolean }>
     ) => {
       console.log(action);
-      if (action.payload.shouldEnableAudio === state.isAudioEnabled) {
+      if (action.payload.shouldEnableAudio === state.isMicrophoneEnabled) {
         return;
       }
-      state.isAudioEnabled = action.payload.shouldEnableAudio;
+      state.isMicrophoneEnabled = action.payload.shouldEnableAudio;
     },
     toggleScreenSharing: (
       state,

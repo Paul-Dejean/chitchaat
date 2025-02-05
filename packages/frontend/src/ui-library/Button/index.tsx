@@ -8,7 +8,7 @@ export function Button({
   className?: string;
 }) {
   return (
-    <button className={className} onClick={onClick} role="button">
+    <button role="button" className={className} onClick={onClick}>
       {children}
     </button>
   );

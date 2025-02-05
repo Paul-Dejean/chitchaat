@@ -15,7 +15,6 @@ export function Peer({
   audioTrack,
   videoTrack,
   displayName,
-
   isMicrophoneEnabled = false,
 }: PeerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,14 +32,6 @@ export function Peer({
       audioRef.current.srcObject = new MediaStream([audioTrack]);
     }
   }, [audioTrack]);
-
-  console.log({
-    audioTrack,
-    videoTrack,
-    isMicrophoneEnabled,
-    videoRef,
-    audioRef,
-  });
 
   return (
     <div className="h-full w-full max-h-full flex justify-center items-center">

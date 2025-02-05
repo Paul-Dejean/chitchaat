@@ -1,8 +1,8 @@
-import { BiChat, BiMessage } from "react-icons/bi";
-import { TextInput } from "../../ui-library/TextInput";
-import { useEffect, useRef, useState } from "react";
 import { useRoomClient } from "@/contexts/RoomContext";
 import { useSelector } from "@/store";
+import { useEffect, useRef } from "react";
+import { ChatInput } from "./ChatInput";
+import { ChatMessage } from "./ChatMessage";
 
 export function Chat({ isOpen }: { isOpen: boolean }) {
   const roomClient = useRoomClient();
@@ -28,22 +28,13 @@ export function Chat({ isOpen }: { isOpen: boolean }) {
         >
           <div className="flex flex-col gap-y-2 overflow-y-auto flex-grow-0">
             {messages.map(({ message, isMe, sender, timestamp }) => (
-              <div
-                className={`${isMe ? "ml-auto bg-green-500" : "mr-auto bg-blue-500"} px-2 py-1 rounded-lg flex flex-col`}
+              <ChatMessage
                 key={`${sender}-${timestamp}`}
-              >
-                <label className="flex gap-x-4">
-                  <span className="font-bold">{isMe ? "You" : sender}</span>{" "}
-                  <span className="">{`${new Date(timestamp).toLocaleTimeString(
-                    [],
-                    {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}`}</span>
-                </label>
-                <span className="text-sm">{message}</span>
-              </div>
+                message={message}
+                isMe={isMe}
+                sender={sender}
+                timestamp={timestamp}
+              />
             ))}
             <div ref={messagesEndRef} />
           </div>
@@ -54,42 +45,6 @@ export function Chat({ isOpen }: { isOpen: boolean }) {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ChatInput({
-  onSendMessage,
-}: {
-  onSendMessage: (message: string) => void;
-}) {
-  const [message, setMessage] = useState("");
-
-  function onSendMessageClick() {
-    if (!message) {
-      return;
-    }
-    onSendMessage(message);
-    setMessage("");
-  }
-  return (
-    <div className="flex gap-x-2 p-2 items-center bg-gray-100 rounded-lg">
-      <TextInput
-        value={message}
-        icon={<BiChat className="text-primary" size={20} />}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            onSendMessageClick();
-          }
-        }}
-        onChange={(event) => setMessage(event.target.value)}
-      />
-      <BiMessage
-        className={`text-primary  ${message ? "text-primary cursor-pointer" : "text-gray-300 cursor-default"}`}
-        size={20}
-        onClick={onSendMessageClick}
-      />
     </div>
   );
 }
