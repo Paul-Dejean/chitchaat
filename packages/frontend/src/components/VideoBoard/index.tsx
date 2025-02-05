@@ -274,12 +274,12 @@ export function VideoBoard() {
             }}
           />
         </div>
-        <div className="absolute right-2 top-0 flex gap-x-4 items-center">
+        <div className="absolute right-2 top-0 bottom-0 flex gap-x-4 items-center">
           <span className="text-white flex items-center">
             <IoMdPerson /> : {Object.keys(peers).length}
           </span>
           <Button
-            className="bg-white rounded-lg p-4"
+            className="bg-white rounded-lg px-4 py-2"
             onClick={() => {
               setModalOpen(true);
             }}

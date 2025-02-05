@@ -11,7 +11,7 @@ export default function RoomPage() {
   const searchParams = useSearchParams();
   const roomId = searchParams.get("roomId") as string;
 
-  const room = useSWR(roomId, getRoomById).data;
+  const { data: room, error } = useSWR(roomId, getRoomById);
 
   if (!room) {
     return <div>Loading...</div>;

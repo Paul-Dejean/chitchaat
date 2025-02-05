@@ -7,7 +7,7 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 export function TextInput({ ...props }: TextareaProps) {
   return (
     <textarea
-      className="px-2 resize-none border-sky-700 border rounded-lg"
+      className="px-2 resize-none border-sky-700 border rounded-lg field-sizing-content w-full"
       {...props}
     />
   );
