@@ -17,6 +17,7 @@ import { Chat } from "../Chat";
 import { InviteGuest } from "../InviteGuest";
 import { PeerGrid } from "../PeerGrid";
 import { VideoBoardControls } from "../VideoBoardControls";
+import { PeerStacked } from "../PeerStacked";
 
 export function VideoBoard() {
   const roomClient = useRoomClient();
@@ -142,8 +143,11 @@ export function VideoBoard() {
   return (
     <div className="flex flex-col mt-2 h-full gap-4">
       <div className="flex flex-1">
-        <div className="w-full h-full">
+        <div className="w-full h-full hidden lg:block">
           <PeerGrid peers={allPeers} />
+        </div>
+        <div className="w-full h-full lg:hidden">
+          <PeerStacked peers={allPeers} />
         </div>
         <div className="py-2">
           <Chat isOpen={isChatOpen} />
@@ -157,12 +161,12 @@ export function VideoBoard() {
           onToggleShareDesktopClick={onToggleShareDesktopClick}
           onToggleChatClick={onToggleChatClick}
         />
-        <div className="absolute right-2 top-0 bottom-0 flex gap-x-4 items-center">
+        <div className="absolute right-2 top-0 bottom-0 flex gap-x-4 items-center ">
           <span className="text-white flex items-center">
             <IoMdPerson /> : {Object.keys(peers).length}
           </span>
           <Button
-            className="bg-white rounded-lg px-4 py-2"
+            className="bg-white rounded-lg px-4 py-2 hidden lg:block"
             onClick={() => {
               setModalOpen(true);
             }}
@@ -171,6 +175,7 @@ export function VideoBoard() {
           </Button>
         </div>
       </div>
+
       <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
         <InviteGuest url={window.location.href} />
       </Modal>

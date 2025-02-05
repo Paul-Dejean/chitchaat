@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 type PeerProps = {
-  audioTrack?: MediaStreamTrack | null;
-  videoTrack?: MediaStreamTrack | null;
+  audioTrack: MediaStreamTrack | null;
+  videoTrack: MediaStreamTrack | null;
   displayName: string;
   isMe: boolean;
   isMicrophoneEnabled?: boolean;
+  isSmall?: boolean;
 };
 
 export function Peer({
@@ -16,6 +17,7 @@ export function Peer({
   videoTrack,
   displayName,
   isMicrophoneEnabled = false,
+  isSmall = false,
 }: PeerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -34,7 +36,7 @@ export function Peer({
   }, [audioTrack]);
 
   return (
-    <div className="h-full w-full max-h-full flex justify-center items-center">
+    <div className="h-full w-full min-h-5 flex justify-center items-center ">
       {audioTrack && <audio ref={audioRef} autoPlay />}
       {videoTrack ? (
         <video
@@ -45,17 +47,21 @@ export function Peer({
           playsInline
         />
       ) : (
-        <div className="h-full w-full rounded-lg bg-gray-700 justify-center items-center flex flex-col gap-y-4">
+        <div
+          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 aspect-video ${isSmall ? "bg-gray-600" : "bg-gray-700"}`}
+        >
           {isMicrophoneEnabled ? (
             <div>
-              <BiMicrophone size={60} />
+              <BiMicrophone size={isSmall ? 20 : 60} />
             </div>
           ) : (
             <div>
-              <BiMicrophoneOff size={60} />
+              <BiMicrophoneOff size={isSmall ? 20 : 60} />
             </div>
           )}
-          <span className="text-gray-400 text-4xl text-bold">
+          <span
+            className={`text-gray-400  text-bold line-clamp-1 ${isSmall ? "text-sm" : "text-2xl"}`}
+          >
             {displayName}
           </span>
         </div>

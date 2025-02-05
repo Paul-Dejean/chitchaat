@@ -43,6 +43,7 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
               id,
               displayName,
               isMicrophoneEnabled,
+              isMe,
             }) => (
               <div
                 key={id}
@@ -51,9 +52,9 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
                 <Peer
                   audioTrack={audioTrack}
                   videoTrack={videoTrack}
-                  displayName={displayName}
+                  displayName={isMe ? "You" : displayName}
                   isMicrophoneEnabled={isMicrophoneEnabled}
-                  isMe={false}
+                  isMe={isMe}
                 />
               </div>
             )
