@@ -16,42 +16,32 @@ export class TransportsService {
     peerId: string,
     sctpCapabilites?: SctpCapabilities,
   ) {
-    const { listenInfos, initialAvailableOutgoingBitrate } = {
-      // listenIps: [
-      //   {
-      //     ip: '0.0.0.0',
-      //     announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V4 ?? '127.0.0.1',
-      //   },
-      //   {
-      //     // For IPv6
-      //     ip: '::',
-      //     announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V6 ?? '::1',
-      //   },
-      // ],
-      listenInfos: [
-        {
-          ip: '::',
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V6 ?? '::1',
-          protocol: 'udp' as const,
-        },
-        {
-          ip: '::',
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V6 ?? '::1',
-          protocol: 'tcp' as const,
-        },
-        {
-          ip: '0.0.0.0',
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V4 ?? '127.0.0.1',
-          protocol: 'udp' as const,
-        },
-        {
-          ip: '0.0.0.0',
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP_V4 ?? '127.0.0.1',
-          protocol: 'tcp' as const,
-        },
-      ],
-      initialAvailableOutgoingBitrate: 1000000,
-    };
+    const listenInfos: MediasoupTypes.TransportListenInfo[] = [
+      {
+        ip: '::',
+        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '::1',
+        protocol: 'udp' as const,
+      },
+      {
+        ip: '::',
+        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '::1',
+        protocol: 'tcp' as const,
+      },
+      {
+        ip: '0.0.0.0',
+        announcedAddress:
+          process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '127.0.0.1',
+        protocol: 'udp' as const,
+      },
+      {
+        ip: '0.0.0.0',
+        announcedAddress:
+          process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '127.0.0.1',
+        protocol: 'tcp' as const,
+      },
+    ];
+
+    const initialAvailableOutgoingBitrate = 1000000;
 
     const room = await this.roomsService.getRoomById(roomId);
     if (!room) {
