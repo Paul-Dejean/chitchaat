@@ -116,7 +116,7 @@ jobs:
           "docker pull 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:${{ github.sha }}",
           "docker ps -aq --filter name=backend | xargs -r docker stop",
           "docker ps -aq --filter name=backend | xargs -r docker rm",
-          "docker run --name backend -d -p [::]:80:3001 -p [::]:10000-10100:10000-10100/udp -e MEDIASOUP_ANNOUNCED_ADDRESS=\"chitchaat-backend.pauldejean.dev\" 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:${{ github.sha }}",
+          "docker run --name backend -d -p [::]:80:3001 -p [::]:10000-10100:10000-10100/udp -e MEDIASOUP_ANNOUNCED_ADDRESS=\"2a05:d012:b0d:b30b:fa95:e34a:9e00:684b\" 311535938619.dkr.ecr.eu-west-3.amazonaws.com/chitchaat:${{ github.sha }}",
           "docker image prune -a -f"
           ]}'
           --timeout-seconds 600
