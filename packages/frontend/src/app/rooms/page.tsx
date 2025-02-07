@@ -19,7 +19,7 @@ export default function RoomPage() {
 
   return (
     <RoomProvider roomId={room.id}>
-      <div className="mx-2 h-screen max-h-screen flex flex-col justify-start">
+      <div className="mx-2 h-screen max-h-dvh flex flex-col justify-start">
         <div className="mb-8 h-full">{room && <VideoBoard></VideoBoard>}</div>
       </div>
     </RoomProvider>
