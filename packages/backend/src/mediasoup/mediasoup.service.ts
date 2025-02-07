@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { createWorker, types as MediasoupTypes } from 'mediasoup';
 
 @Injectable()
-export class MediasoupService {
+export class MediasoupService implements OnModuleInit {
   private worker: MediasoupTypes.Worker | undefined;
 
-  constructor() {
-    this.initWorker();
+  async onModuleInit() {
+    await this.initWorker();
   }
 
   async initWorker() {

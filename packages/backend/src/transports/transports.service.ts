@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { RoomsService } from 'src/rooms/rooms.service';
+import { RoomsService } from '@/rooms/rooms.service';
 import { types as MediasoupTypes } from 'mediasoup';
-import { ClientsService } from 'src/clients/clients.service';
+import { ClientsService } from '@/clients/clients.service';
 import { SctpCapabilities } from 'mediasoup/node/lib/types';
 
 @Injectable()

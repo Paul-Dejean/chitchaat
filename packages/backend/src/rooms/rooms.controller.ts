@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
-import { MediasoupService } from 'src/mediasoup/mediasoup.service';
+import { MediasoupService } from '@/mediasoup/mediasoup.service';
 import { randomUUID } from 'crypto';
 
 @Controller('rooms')

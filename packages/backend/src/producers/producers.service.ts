@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RoomsService } from 'src/rooms/rooms.service';
+import { RoomsService } from '@/rooms/rooms.service';
 import { types as MediasoupTypes } from 'mediasoup';
 
 @Injectable()

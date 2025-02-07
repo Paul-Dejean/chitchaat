@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { types as MediasoupTypes } from 'mediasoup';
-import { DisplayNameGeneratorService } from 'src/display-name-generator/display-name-generator.service';
+import { DisplayNameGeneratorService } from '@/display-name-generator/display-name-generator.service';
 
 type Room = {
   id: string;
@@ -36,7 +36,7 @@ export class RoomsService {
     );
   }
 
-  async createRoom(roomId: string, router: MediasoupTypes.Router) {
+  createRoom(roomId: string, router: MediasoupTypes.Router) {
     const room = {
       id: roomId,
       router,

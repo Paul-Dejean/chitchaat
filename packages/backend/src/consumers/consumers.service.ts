@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RoomsService } from 'src/rooms/rooms.service';
+
 import { EventEmitter } from 'stream';
 import { types as MediasoupTypes } from 'mediasoup';
+import { RoomsService } from '@/rooms/rooms.service';
 
 @Injectable()
 export class ConsumersService extends EventEmitter {

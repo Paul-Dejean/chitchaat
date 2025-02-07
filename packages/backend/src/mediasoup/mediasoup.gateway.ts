@@ -10,11 +10,11 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ConsumersService } from 'src/consumers/consumers.service';
-import { ProducersService } from 'src/producers/producers.service';
-import { RoomsService } from 'src/rooms/rooms.service';
-import { TransportsService } from 'src/transports/transports.service';
-import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe';
+import { ConsumersService } from '@/consumers/consumers.service';
+import { ProducersService } from '@/producers/producers.service';
+import { RoomsService } from '@/rooms/rooms.service';
+import { TransportsService } from '@/transports/transports.service';
+import { ZodValidationPipe } from '@/zod-validation/zod-validation.pipe';
 import {
   closeProducerSchema,
   ConnectTransportDto,
@@ -32,9 +32,9 @@ import {
   resumeConsumerSchema,
   resumeProducerSchema,
 } from './mediasoup.schemas';
-import { ClientsService } from 'src/clients/clients.service';
-import { WsExceptionFilter } from 'src/common/filters/ws-exception-filter/ws-exception-filter';
-import { DataProducersService } from 'src/data-producers/data-producers.service';
+import { ClientsService } from '@/clients/clients.service';
+import { WsExceptionFilter } from '@/common/filters/ws-exception-filter/ws-exception-filter';
+import { DataProducersService } from '@/data-producers/data-producers.service';
 @WebSocketGateway({ cors: '*' })
 @UseFilters(WsExceptionFilter)
 export class MediasoupGateway
