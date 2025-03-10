@@ -19,24 +19,24 @@ export class TransportsService {
     const listenInfos: MediasoupTypes.TransportListenInfo[] = [
       {
         ip: '::',
-        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '::1',
+        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_IPV6_ADDRESS ?? '::1',
         protocol: 'udp' as const,
       },
       {
         ip: '::',
-        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '::1',
+        announcedAddress: process.env.MEDIASOUP_ANNOUNCED_IPV6_ADDRESS ?? '::1',
         protocol: 'tcp' as const,
       },
       {
         ip: '0.0.0.0',
         announcedAddress:
-          process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '127.0.0.1',
+          process.env.MEDIASOUP_ANNOUNCED_IPV4_ADDRESS ?? '127.0.0.1',
         protocol: 'udp' as const,
       },
       {
         ip: '0.0.0.0',
         announcedAddress:
-          process.env.MEDIASOUP_ANNOUNCED_ADDRESS ?? '127.0.0.1',
+          process.env.MEDIASOUP_ANNOUNCED_IPV4_ADDRESS ?? '127.0.0.1',
         protocol: 'tcp' as const,
       },
     ];
