@@ -1,7 +1,8 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { MediasoupService } from '@/mediasoup/mediasoup.service';
-import { randomUUID } from 'crypto';
+import ShortUniqueId from 'short-unique-id';
+const { randomUUID } = new ShortUniqueId({ length: 10 });
 
 @Controller('rooms')
 export class RoomsController {
