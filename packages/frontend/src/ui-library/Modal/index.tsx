@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 

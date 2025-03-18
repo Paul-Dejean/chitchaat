@@ -15,7 +15,7 @@ type Consumer = {
   isPaused: boolean;
 };
 const initialState = {
-  state: RoomClientState.NEW,
+  state: "NEW", // RoomClientState.NEW,
   isCameraEnabled: false,
   isMicrophoneEnabled: false,
   isScreenSharingEnabled: false,

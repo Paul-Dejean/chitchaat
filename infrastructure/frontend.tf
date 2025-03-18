@@ -8,7 +8,7 @@ resource "aws_s3_bucket_website_configuration" "frontend_s3_bucket_website_confi
     suffix = "index.html"
   }
   error_document {
-    key = "404.html"
+    key = "index.html"
   }
 }
 
@@ -62,5 +62,5 @@ resource "aws_s3_bucket_policy" "frontend_s3_bucket_policy" {
       }
     }]
   })
-  depends_on = [ aws_s3_bucket_public_access_block.chitchaat_public_access ]
+  depends_on = [aws_s3_bucket_public_access_block.chitchaat_public_access]
 }

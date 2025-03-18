@@ -1,5 +1,3 @@
-"use client";
-
 import qrCode from "qrcode";
 import { useEffect, useRef } from "react";
 

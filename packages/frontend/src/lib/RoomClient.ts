@@ -1,5 +1,5 @@
 // import { Device } from "mediasoup-client";
-"use client";
+
 import { Store } from "@/store";
 import { roomActions } from "@/store/slices/room";
 import {
@@ -36,10 +36,11 @@ export class RoomClient {
 
   constructor({ store }: { store: Store }) {
     this.store = store;
-    if (!process.env.NEXT_PUBLIC_API_URL) {
+    console.log(import.meta.env);
+    if (!import.meta.env.VITE_API_URL) {
       throw new Error("API URL not set");
     }
-    this.wsClient = new WsClient(process.env.NEXT_PUBLIC_API_URL);
+    this.wsClient = new WsClient(import.meta.env.VITE_API_URL);
     this.mediasoupClient = new MediasoupClient(this.wsClient);
   }
 

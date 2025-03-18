@@ -1,7 +1,6 @@
 export async function createRoom() {
   try {
-    console.log(process.env);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = import.meta.env.VITE_API_URL;
     console.log({ baseUrl });
     const url = `${baseUrl}/rooms`;
     console.log({ url });
@@ -25,7 +24,7 @@ export type Room = {
 };
 export async function getRoomById(roomId: string): Promise<Room | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = import.meta.env.VITE_API_URL;
     const url = `${baseUrl}/rooms/${roomId}`;
     const response = await fetch(url);
     return response.json();

@@ -1,6 +1,6 @@
 export async function sendInvitationEmail(email: string, roomUrl: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = import.meta.env.VITE_API_URL;
     const url = `${baseUrl}/invite`;
     const response = await fetch(url, {
       method: "POST",

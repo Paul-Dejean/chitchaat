@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 import { useRoomClient } from "@/contexts/RoomContext";
@@ -9,7 +7,6 @@ import { useDispatch, useSelector } from "@/store";
 import { Button } from "../../ui-library/Button";
 
 import { roomActions } from "@/store/slices/room";
-import { useRouter } from "next/navigation";
 
 import { Modal } from "@/ui-library/Modal";
 import { IoMdPerson } from "react-icons/io";
@@ -18,8 +15,10 @@ import { InviteGuest } from "../InviteGuest";
 import { PeerGrid } from "../PeerGrid";
 import { VideoBoardControls } from "../VideoBoardControls";
 import { PeerStacked } from "../PeerStacked";
+import { useNavigate } from "react-router";
 
 export function VideoBoard() {
+  const navigate = useNavigate();
   const roomClient = useRoomClient();
   const peers = useSelector((state) => state.room.peers);
   const consumers = useSelector((state) => state.room.consumers);
@@ -37,7 +36,6 @@ export function VideoBoard() {
   );
 
   const dispatch = useDispatch();
-  const router = useRouter();
 
   const allPeers = Object.values(peers).map((peer) => {
     if (peer.isMe) {
@@ -70,7 +68,7 @@ export function VideoBoard() {
 
   async function onEndCallClick() {
     await roomClient.leaveRoom();
-    router.push("/");
+    navigate("/");
   }
 
   async function onToggleVideoClick() {

@@ -1,4 +1,3 @@
-"use client";
 import { RoomClient } from "@/lib/RoomClient";
 import { createContext, useContext, useEffect } from "react";
 import { store } from "@/store";
