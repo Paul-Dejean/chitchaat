@@ -42,6 +42,7 @@ async function getVideoStream(isPortrait: boolean) {
 
 export function VideoBoard() {
   const navigate = useNavigate();
+  const [areControlsVisibles, setAreControlsVisibles] = useState(true);
 
   const roomClient = useRoomClient();
   const peers = useSelector((state) => state.room.peers);
@@ -162,16 +163,48 @@ export function VideoBoard() {
   }
 
   return (
-    <div className="flex flex-col mt-2 h-full gap-4">
+    <div
+      className="relative flex flex-col h-full overflow-hidden"
+      onClick={() =>
+        setAreControlsVisibles((areControlsVisibles) => !areControlsVisibles)
+      }
+    >
+      <div className="w-full flex justify-end p-2 gap-x-2">
+        <span className="text-white flex items-center">
+          <IoMdPerson /> : {Object.keys(peers).length}
+        </span>
+        <Button
+          className="bg-white rounded-lg px-4 py-2"
+          onClick={() => {
+            setModalOpen(true);
+          }}
+        >
+          Invite Guests
+        </Button>
+      </div>
       <div className="flex flex-1">
-        <div className="w-full h-full p-8">
+        <div className="w-full h-full md:p-8 p-4">
           <PeerGrid peers={allPeers} />
         </div>
         <div className="py-2">
           <Chat isOpen={isChatOpen} />
         </div>
       </div>
-      <div className="relative">
+      <div
+        style={
+          isMobileDevice()
+            ? {
+                position: "absolute",
+                backgroundColor: "var(--color-gray-700)",
+                bottom: 0,
+                transform: `translateY(${areControlsVisibles ? "0px" : "100%"})`,
+                transition: "transform 0.3s ease, opacity 0.3s ease",
+                borderRadius: "20px 20px 0px 00px",
+              }
+            : { visibility: "visible" }
+        }
+        className="flex justify-center gap-x-2 p-4 w-full"
+      >
         <VideoBoardControls
           onEndCallClick={onEndCallClick}
           onToggleAudioClick={onToggleAudioClick}
@@ -179,19 +212,7 @@ export function VideoBoard() {
           onToggleShareDesktopClick={onToggleShareDesktopClick}
           onToggleChatClick={onToggleChatClick}
         />
-        <div className="absolute right-2 top-0 bottom-0 flex gap-x-4 items-center ">
-          <span className="text-white flex items-center">
-            <IoMdPerson /> : {Object.keys(peers).length}
-          </span>
-          <Button
-            className="bg-white rounded-lg px-4 py-2 hidden lg:block"
-            onClick={() => {
-              setModalOpen(true);
-            }}
-          >
-            Invite Guests
-          </Button>
-        </div>
+        <div className="absolute right-2 top-0 bottom-0 flex gap-x-4 items-center "></div>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>

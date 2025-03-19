@@ -32,7 +32,10 @@ export const VideoBoardControls = ({
   const isChatOpen = useSelector((state) => state.room.isChatOpen);
 
   return (
-    <div className="flex justify-center gap-x-2 p-4">
+    <div
+      className="flex justify-center gap-x-2 p-4"
+      onClick={(e) => e.stopPropagation()}
+    >
       <IconButton
         icon={
           isMicrophoneEnabled ? (
