@@ -5,3 +5,7 @@
   --color-background: #17202e;
   --color-secondary: #6b758e;
 }
+
+body {
+  background-color: var(--color-background);
+}

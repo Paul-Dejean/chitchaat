@@ -14,11 +14,35 @@ import { Chat } from "../Chat";
 import { InviteGuest } from "../InviteGuest";
 import { PeerGrid } from "../PeerGrid";
 import { VideoBoardControls } from "../VideoBoardControls";
-import { PeerStacked } from "../PeerStacked";
 import { useNavigate } from "react-router";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { isMobileDevice } from "@/utils/device";
+
+async function getVideoStream(isPortrait: boolean) {
+  const isMobile = isMobileDevice();
+
+  console.log({ supported: navigator.mediaDevices.getSupportedConstraints() });
+  const constraints = {
+    video: {
+      // width: isMobile && isPortrait ? 720 : 1280,
+      // height: isMobile && isPortrait ? 1280 : 720,
+      // aspectRatio: isMobile && isPortrait ? 9 / 16 : 16 / 9,
+      facingMode: "user",
+    },
+  };
+  console.log({ isPortrait, isMobile });
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  // const track = stream.getVideoTracks()[0];
+  // console.log(track.getSettings());
+  // await track.applyConstraints({
+  //   aspectRatio: isMobile && isPortrait ? 9 / 16 : 16 / 9,
+  // });
+  return stream;
+}
 
 export function VideoBoard() {
   const navigate = useNavigate();
+
   const roomClient = useRoomClient();
   const peers = useSelector((state) => state.room.peers);
   const consumers = useSelector((state) => state.room.consumers);
@@ -31,11 +55,10 @@ export function VideoBoard() {
   const isScreenSharingEnabled = useSelector(
     (state) => state.room.isScreenSharingEnabled
   );
-  const [currentTrack, setCurrentTrack] = useState<MediaStreamTrack | null>(
-    null
-  );
+  const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
 
   const dispatch = useDispatch();
+  const isPortrait = useMediaQuery("(orientation: portrait)");
 
   const allPeers = Object.values(peers).map((peer) => {
     if (peer.isMe) {
@@ -43,7 +66,7 @@ export function VideoBoard() {
         id: peer.id,
         displayName: peer.displayName,
         audioTrack: null,
-        videoTrack: currentTrack,
+        videoTrack: currentStream?.getVideoTracks()[0] || null,
         isMicrophoneEnabled: isMicrophoneEnabled,
         isMe: true,
       };
@@ -56,7 +79,7 @@ export function VideoBoard() {
       (consumer) =>
         consumer.peerId === peer.id && consumer.track.kind === "video"
     )?.[0];
-    id: return {
+    return {
       id: peer.id,
       displayName: peer.displayName,
       audioTrack: audioConsumer?.track,
@@ -74,19 +97,17 @@ export function VideoBoard() {
   async function onToggleVideoClick() {
     if (!isCameraEnabled) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-        const track = stream.getVideoTracks()[0];
-        setCurrentTrack(track);
+        const stream = await getVideoStream(isPortrait);
+        setCurrentStream(stream);
         await roomClient.enableWebcam();
         dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
-      currentTrack?.stop();
-      setCurrentTrack(null);
+      const track = currentStream?.getVideoTracks()[0];
+      track?.stop();
+      setCurrentStream(null);
       await roomClient.disableWebcam();
       dispatch(roomActions.toggleVideo({ shouldEnableVideo: false }));
     }
@@ -109,9 +130,9 @@ export function VideoBoard() {
   async function onToggleShareDesktopClick() {
     if (!isScreenSharingEnabled) {
       try {
-        const track = await roomClient.enableScreenSharing();
-        if (track) {
-          setCurrentTrack(track);
+        const stream = await roomClient.enableScreenSharing();
+        if (stream) {
+          setCurrentStream(stream);
         }
 
         dispatch(
@@ -121,7 +142,9 @@ export function VideoBoard() {
         console.error("Failed to get the stream", err);
       }
     } else {
-      setCurrentTrack(null);
+      const track = currentStream?.getVideoTracks()[0];
+      track?.stop();
+      setCurrentStream(null);
       await roomClient.disableScreenSharing();
       dispatch(
         roomActions.toggleScreenSharing({ shouldEnableScreenSharing: false })
@@ -141,11 +164,8 @@ export function VideoBoard() {
   return (
     <div className="flex flex-col mt-2 h-full gap-4">
       <div className="flex flex-1">
-        <div className="w-full h-full hidden lg:block">
+        <div className="w-full h-full p-8">
           <PeerGrid peers={allPeers} />
-        </div>
-        <div className="w-full h-full lg:hidden">
-          <PeerStacked peers={allPeers} />
         </div>
         <div className="py-2">
           <Chat isOpen={isChatOpen} />

@@ -1,6 +1,17 @@
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Peer } from "../Peer";
 
-function getVideoHeight(nbParticipants: number) {
+function getVideoHeight(nbParticipants: number, isSmallScreen: boolean) {
+  if (isSmallScreen) {
+    if (nbParticipants <= 1) {
+      return "h-full";
+    }
+    if (nbParticipants <= 3) {
+      return "h-1/2";
+    }
+    return "h-1/3";
+  }
+
   if (nbParticipants <= 2) {
     return "h-full";
   }
@@ -10,7 +21,14 @@ function getVideoHeight(nbParticipants: number) {
   return "h-1/3";
 }
 
-function getVideoWidth(nbParticipants: number) {
+function getVideoWidth(nbParticipants: number, isSmallScreen: boolean) {
+  if (isSmallScreen) {
+    if (nbParticipants <= 2) {
+      return "w-full";
+    }
+
+    return "w-1/2";
+  }
   if (nbParticipants === 1) {
     return "w-full";
   }
@@ -30,8 +48,9 @@ type Peer = {
 };
 export function PeerGrid({ peers }: { peers: Peer[] }) {
   const nbParticipants = peers.length;
-  const videoHeight = getVideoHeight(nbParticipants);
-  const videoWidth = getVideoWidth(nbParticipants);
+  const isSmallScreen = useMediaQuery("(max-width: 768px)");
+  const videoHeight = getVideoHeight(nbParticipants, isSmallScreen);
+  const videoWidth = getVideoWidth(nbParticipants, isSmallScreen);
   return (
     <div className="relative h-full w-full overflow-auto">
       <div className="absolute inset-0">
@@ -49,13 +68,15 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
                 key={id}
                 className={` flex justify-center items-center ${videoHeight} ${videoWidth} p-2`}
               >
-                <Peer
-                  audioTrack={audioTrack}
-                  videoTrack={videoTrack}
-                  displayName={isMe ? "You" : displayName}
-                  isMicrophoneEnabled={isMicrophoneEnabled}
-                  isMe={isMe}
-                />
+                <div className="h-full w-full bg-gray-700 rounded-lg">
+                  <Peer
+                    audioTrack={audioTrack}
+                    videoTrack={videoTrack}
+                    displayName={isMe ? "You" : displayName}
+                    isMicrophoneEnabled={isMicrophoneEnabled}
+                    isMe={isMe}
+                  />
+                </div>
               </div>
             )
           )}

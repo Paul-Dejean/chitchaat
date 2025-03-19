@@ -320,7 +320,7 @@ export class RoomClient {
       const track = stream.getVideoTracks()[0];
       this.desktopProducer = await this.mediasoupClient.createProducer(track);
       this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
-      return track;
+      return stream;
     }
   }
 

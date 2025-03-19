@@ -38,7 +38,7 @@ export function Peer({
       {audioTrack && <audio ref={audioRef} autoPlay />}
       {videoTrack ? (
         <video
-          className="h-full w-full rounded-lg  object-cover"
+          className="h-full w-full rounded-lg  object-contain"
           ref={videoRef}
           autoPlay
           muted
