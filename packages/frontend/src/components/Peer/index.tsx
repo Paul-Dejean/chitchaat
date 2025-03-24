@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
+import { LuExpand } from "react-icons/lu";
 
 type PeerProps = {
   audioTrack: MediaStreamTrack | null;
@@ -8,6 +9,7 @@ type PeerProps = {
   isMe: boolean;
   isMicrophoneEnabled?: boolean;
   isSmall?: boolean;
+  onExpandClick?: () => void;
 };
 
 export function Peer({
@@ -16,14 +18,20 @@ export function Peer({
   displayName,
   isMicrophoneEnabled = false,
   isSmall = false,
+  isMe = false,
+  onExpandClick,
 }: PeerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (videoRef.current && videoTrack) {
-      console.log("setting video track");
+      console.log("setting video track", { videoTrack });
+      console.log(videoTrack?.readyState); // should be "live"
+      console.log(videoTrack?.enabled);
       videoRef.current.srcObject = new MediaStream([videoTrack]);
+      // console.log({ videoRef: videoRef.current });
+      // videoRef.current.play();
     }
   }, [videoTrack]);
 
@@ -34,11 +42,11 @@ export function Peer({
   }, [audioTrack]);
 
   return (
-    <div className="h-full w-full min-h-5 flex justify-center items-center ">
+    <div className="relative group h-full w-full  flex justify-center items-center ">
       {audioTrack && <audio ref={audioRef} autoPlay />}
       {videoTrack ? (
         <video
-          className="h-full w-full rounded-lg  object-contain"
+          className={`h-full w-full rounded-lg  object-fit`} //${isMe ? "object-cover" : "object-fit"}`
           ref={videoRef}
           autoPlay
           muted
@@ -46,7 +54,7 @@ export function Peer({
         />
       ) : (
         <div
-          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 aspect-video ${isSmall ? "bg-gray-600" : "bg-gray-700"}`}
+          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 p-2 bg-gray-700`}
         >
           {isMicrophoneEnabled ? (
             <div>
@@ -62,6 +70,14 @@ export function Peer({
           >
             {displayName}
           </span>
+        </div>
+      )}
+      {isMe && (
+        <div
+          data-nodrag
+          className="group-hover:block hidden absolute bottom-0 right-0 bg-white p-1 rounded-lg"
+        >
+          <LuExpand size={20} onClick={onExpandClick} />
         </div>
       )}
     </div>

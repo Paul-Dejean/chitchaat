@@ -33,7 +33,7 @@ export const VideoBoardControls = ({
 
   return (
     <div
-      className="flex justify-center gap-x-2 p-4"
+      className="flex justify-center gap-x-2 md:p-4 p-2"
       onClick={(e) => e.stopPropagation()}
     >
       <IconButton

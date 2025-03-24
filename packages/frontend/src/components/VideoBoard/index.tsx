@@ -169,7 +169,23 @@ export function VideoBoard() {
         setAreControlsVisibles((areControlsVisibles) => !areControlsVisibles)
       }
     >
-      <div className="w-full flex justify-end p-2 gap-x-2">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={
+          isMobileDevice()
+            ? {
+                position: "absolute",
+                backgroundColor: "var(--color-gray-700)",
+                top: 0,
+                transform: `translateY(${areControlsVisibles ? "0px" : "-100%"})`,
+                transition: "transform 0.3s ease, opacity 0.3s ease",
+                borderRadius: "0px 0px 20px 20px",
+                border: "1px solid black",
+              }
+            : { visibility: "visible" }
+        }
+        className="w-full flex justify-end p-4 gap-x-2 z-2000"
+      >
         <span className="text-white flex items-center">
           <IoMdPerson /> : {Object.keys(peers).length}
         </span>
@@ -191,6 +207,7 @@ export function VideoBoard() {
         </div>
       </div>
       <div
+        onClick={(e) => e.stopPropagation()}
         style={
           isMobileDevice()
             ? {
@@ -199,7 +216,8 @@ export function VideoBoard() {
                 bottom: 0,
                 transform: `translateY(${areControlsVisibles ? "0px" : "100%"})`,
                 transition: "transform 0.3s ease, opacity 0.3s ease",
-                borderRadius: "20px 20px 0px 00px",
+                borderRadius: "20px 20px 0px 0px",
+                border: "1px solid black",
               }
             : { visibility: "visible" }
         }
