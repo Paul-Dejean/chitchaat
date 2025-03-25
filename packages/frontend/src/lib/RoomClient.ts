@@ -99,6 +99,7 @@ export class RoomClient {
     this.wsClient.registerHandler(
       "newPeer",
       async (newPeer: { id: string; displayName: string }) => {
+        console.log({ newPeer });
         this.store.dispatch(
           roomActions.addPeer({
             ...newPeer,
