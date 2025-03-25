@@ -30,7 +30,6 @@ export const Draggable: React.FC<DraggableProps> = ({
   onDragStart,
   onDrag,
   onDragEnd,
-  scale = 1,
 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState({ x: defaultX, y: defaultY });

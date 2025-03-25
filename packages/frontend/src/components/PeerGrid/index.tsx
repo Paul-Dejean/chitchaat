@@ -3,6 +3,7 @@ import { Peer } from "../Peer";
 import { useState } from "react";
 
 import { Draggable } from "../Draggable";
+import { useLongPress } from "@/hooks/useLongPress";
 
 function getGridDimensions(
   numberOfParticipants: number,
@@ -39,9 +40,12 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
   console.log({ peers });
   const [meFloating, setMeFloating] = useState(false);
   const [isSmallPreview, setIsSmallPreview] = useState(false);
-  const nbParticipants = meFloating ? peers.length - 1 : peers.length;
+  const nbParticipants = peers.length;
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
-  const { cols, rows } = getGridDimensions(nbParticipants, isSmallScreen);
+
+  const touchHandlers = useLongPress({
+    onLongPress: () => setMeFloating((meFloating) => !meFloating),
+  });
 
   let gridPeers = peers;
   const me = peers.find((peer) => peer.isMe);
@@ -50,6 +54,8 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
     gridPeers = peers.filter((peer) => !peer.isMe);
   }
 
+  const { cols, rows } = getGridDimensions(gridPeers.length, isSmallScreen);
+
   console.log({ me });
   return (
     <div className="relative h-full w-full overflow-auto">
@@ -57,7 +63,9 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
         <Draggable bound="parent">
           {meFloating && me && (
             <div
-              onClick={() => {
+              {...touchHandlers}
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsSmallPreview((smallPreview) => !smallPreview);
               }}
               className={`transform transition-all duration-300 ease-in-out origin-top-left ${
@@ -73,6 +81,8 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
                 isMe={true}
                 onExpandClick={() => setMeFloating(false)}
                 isSmall={true}
+                nbParticipants={nbParticipants}
+                isExpanded={!meFloating}
               />
             </div>
           )}
@@ -95,7 +105,10 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
                 }}
                 className={`flex justify-center items-center p-2`}
               >
-                <div className="h-full w-full bg-gray-700 rounded-lg">
+                <div
+                  className="h-full w-full bg-gray-700 rounded-lg"
+                  {...(isMe ? touchHandlers : {})}
+                >
                   <Peer
                     audioTrack={audioTrack}
                     videoTrack={videoTrack}
@@ -106,6 +119,7 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
                       if (nbParticipants == 1) return;
                       setMeFloating(true);
                     }}
+                    nbParticipants={nbParticipants}
                   />
                 </div>
               </div>

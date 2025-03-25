@@ -1,6 +1,7 @@
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useEffect, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
-import { LuExpand } from "react-icons/lu";
+import { LuExpand, LuMinimize2 } from "react-icons/lu";
 
 type PeerProps = {
   audioTrack: MediaStreamTrack | null;
@@ -10,6 +11,8 @@ type PeerProps = {
   isMicrophoneEnabled?: boolean;
   isSmall?: boolean;
   onExpandClick?: () => void;
+  isExpanded?: boolean;
+  nbParticipants?: number;
 };
 
 export function Peer({
@@ -20,9 +23,12 @@ export function Peer({
   isSmall = false,
   isMe = false,
   onExpandClick,
+  isExpanded = true,
+  nbParticipants = 0,
 }: PeerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     if (videoRef.current && videoTrack) {
@@ -46,7 +52,7 @@ export function Peer({
       {audioTrack && <audio ref={audioRef} autoPlay />}
       {videoTrack ? (
         <video
-          className={`h-full w-full rounded-lg  object-fit`} //${isMe ? "object-cover" : "object-fit"}`
+          className={`h-full w-full rounded-lg ${isSmallScreen ? "object-cover" : "object-fit"}`}
           ref={videoRef}
           autoPlay
           muted
@@ -72,12 +78,16 @@ export function Peer({
           </span>
         </div>
       )}
-      {isMe && (
+      {isMe && nbParticipants >= 2 && (
         <div
           data-nodrag
           className="group-hover:block hidden absolute bottom-0 right-0 bg-white p-1 rounded-lg"
         >
-          <LuExpand size={20} onClick={onExpandClick} />
+          {isExpanded ? (
+            <LuMinimize2 size={20} onClick={onExpandClick} />
+          ) : (
+            <LuExpand size={20} onClick={onExpandClick} />
+          )}
         </div>
       )}
     </div>
