@@ -45,7 +45,7 @@ export const VideoBoardControls = ({
           )
         }
         aria-label="Toggle Microphone"
-        className={`${!isMicrophoneEnabled && "bg-red-500"}`}
+        variant={isMicrophoneEnabled ? "primary" : "danger"}
         onClick={() => {
           onToggleAudioClick();
         }}
@@ -59,13 +59,13 @@ export const VideoBoardControls = ({
           )
         }
         aria-label="Toggle Video"
-        className={`${!isCameraEnabled && "bg-red-500"}`}
+        variant={isCameraEnabled ? "primary" : "danger"}
         onClick={() => {
           onToggleVideoClick();
         }}
       />
       <Button
-        className="bg-red-500 rounded-full text-white py-2 px-8"
+       variant="danger"
         onClick={() => {
           onEndCallClick();
         }}
@@ -75,14 +75,14 @@ export const VideoBoardControls = ({
       <IconButton
         icon={<TbDeviceDesktopShare size={20} />}
         aria-label="Share Desktop"
-        className={`${!isScreenSharingEnabled && "bg-red-500"}`}
+        variant={isScreenSharingEnabled  ? "primary" : "danger"}
         onClick={() => {
           onToggleShareDesktopClick();
         }}
       />
       <IconButton
         icon={<IoChatbubbleEllipsesOutline size={20} />}
-        className={`${!isChatOpen && "bg-red-500"}`}
+        variant={isChatOpen ? "primary" : "danger"}
         aria-label="Toggle Chat"
         onClick={() => {
           onToggleChatClick();

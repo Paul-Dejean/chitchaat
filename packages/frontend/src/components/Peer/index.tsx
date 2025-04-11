@@ -60,7 +60,7 @@ export function Peer({
         />
       ) : (
         <div
-          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 p-2 bg-gray-700`}
+          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 p-2 bg-surface`}
         >
           {isMicrophoneEnabled ? (
             <div>

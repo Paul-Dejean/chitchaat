@@ -19,7 +19,7 @@ export default function HomePage() {
   };
   return (
     <main className="h-screen  flex items-center justify-center bg-background">
-      <Button className="bg-white rounded-lg p-4" onClick={onCreateRoomClick}>
+      <Button variant="primary" onClick={onCreateRoomClick}>
         Create Room
       </Button>
     </main>

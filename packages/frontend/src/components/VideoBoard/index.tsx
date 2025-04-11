@@ -190,7 +190,7 @@ export function VideoBoard() {
           <IoMdPerson /> : {Object.keys(peers).length}
         </span>
         <Button
-          className="bg-white rounded-lg px-4 py-2"
+          variant="primary"
           onClick={() => {
             setModalOpen(true);
           }}

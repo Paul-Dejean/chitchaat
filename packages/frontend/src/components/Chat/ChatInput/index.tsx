@@ -17,7 +17,7 @@ export function ChatInput({
     setMessage("");
   }
   return (
-    <div className="flex gap-x-2 p-2 items-center bg-gray-100 rounded-lg">
+    <div className="flex gap-x-2 p-2 items-center bg-surface rounded-lg">
       <TextInput
         value={message}
         icon={<BiChat className="text-primary" size={20} />}

@@ -30,7 +30,7 @@ export function InviteGuest({ url }: { url: string }) {
         </h2>
         <canvas ref={canvasRef} className="mx-auto"></canvas>
         <h2 className="font-bold">Or by sharing this url</h2>
-        <div className="flex items-center gap-2 p-2 border rounded-lg bg-gray-100 w-fit">
+        <div className="flex items-center gap-2 p-2 border rounded-lg bg-surface w-fit">
           <span className="text-sm font-mono max-w-xs mr-2">{url}</span>
           <button onClick={handleCopy}>
             {copied ? (
