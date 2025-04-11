@@ -5,17 +5,17 @@
   --font-heading: 'Poppins', sans-serif;
 
   /* Colors */
-  --color-background: #0D1117;
-  --color-surface: #161B22;
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-secondary: #10B981;
-  --color-danger: #EF4444;
-  --color-border: #2F3B51;
-  --color-muted: #94A3B8;
-  --color-inverted: #0D1117;
-  --color-base: #E5E7EB; /* ✅ main text color */
-  --color-backdrop: rgb(0 0 0 / 0.6);
+--color-background: #121620; /* Darker background */
+--color-surface: #1E2433; /* Dark surface that contrasts with background */
+--color-primary: #5D5DFF; /* Vibrant purple primary */
+--color-primary-hover: #4A4AE5; /* Darker purple for hover */
+--color-secondary: #8B5CF6; /* Soft secondary purple */
+--color-danger: #EF4444; /* Clear red for danger */
+--color-border: #2E3446; /* Subtle border color */
+--color-muted: #94A3B8; /* Muted text that's still readable */
+--color-inverted: #FFFFFF; /* White for inverted elements */
+--color-base: #E2E8F0; /* Off-white text that's easy on eyes */
+--color-backdrop: rgb(0 0 0 / 0.7);
 }
 
 html {

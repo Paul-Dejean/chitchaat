@@ -33,15 +33,15 @@ export const VideoBoardControls = ({
 
   return (
     <div
-      className="flex justify-center gap-x-2 md:p-4 p-2"
+      className="flex justify-center items-center gap-x-3 md:p-4 p-3 bg-surface/80 backdrop-blur-sm rounded-lg shadow-md"
       onClick={(e) => e.stopPropagation()}
     >
       <IconButton
         icon={
           isMicrophoneEnabled ? (
-            <BiMicrophone size={20} />
+            <BiMicrophone size={22} />
           ) : (
-            <BiMicrophoneOff size={20} />
+            <BiMicrophoneOff size={22} />
           )
         }
         aria-label="Toggle Microphone"
@@ -49,13 +49,14 @@ export const VideoBoardControls = ({
         onClick={() => {
           onToggleAudioClick();
         }}
+        className="hover:scale-105 transition-transform duration-200"
       />
       <IconButton
         icon={
           isCameraEnabled ? (
-            <IoVideocamOutline size={20} />
+            <IoVideocamOutline size={22} />
           ) : (
-            <IoVideocamOffOutline size={20} />
+            <IoVideocamOffOutline size={22} />
           )
         }
         aria-label="Toggle Video"
@@ -63,30 +64,34 @@ export const VideoBoardControls = ({
         onClick={() => {
           onToggleVideoClick();
         }}
+        className="hover:scale-105 transition-transform duration-200"
       />
       <Button
-       variant="danger"
+        variant="danger"
         onClick={() => {
           onEndCallClick();
         }}
+        className="px-5 py-2 font-medium hover:bg-danger-hover transition-colors duration-200 shadow-lg"
       >
         End Call
       </Button>
       <IconButton
-        icon={<TbDeviceDesktopShare size={20} />}
+        icon={<TbDeviceDesktopShare size={22} />}
         aria-label="Share Desktop"
-        variant={isScreenSharingEnabled  ? "primary" : "danger"}
+        variant={isScreenSharingEnabled ? "primary" : "danger"}
         onClick={() => {
           onToggleShareDesktopClick();
         }}
+        className="hover:scale-105 transition-transform duration-200"
       />
       <IconButton
-        icon={<IoChatbubbleEllipsesOutline size={20} />}
+        icon={<IoChatbubbleEllipsesOutline size={22} />}
         variant={isChatOpen ? "primary" : "danger"}
         aria-label="Toggle Chat"
         onClick={() => {
           onToggleChatClick();
         }}
+        className="hover:scale-105 transition-transform duration-200"
       />
     </div>
   );

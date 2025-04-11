@@ -1,33 +1,35 @@
-type ButtonProps = {
-  children: React.ReactNode;
-  onClick: () => void;
-  className?: string;
-  variant?: "primary" | "secondary" | "danger" | "muted";
-};
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
-const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-primary text-inverted hover:bg-primary-hover",
-  secondary: "bg-surface text-base hover:bg-border",
-  danger: "bg-danger text-inverted hover:bg-red-600",
-  muted: "text-muted hover:text-base",
-};
-
-export function Button({
+export const Button = ({
   children,
-  onClick,
-  className,
-  variant = "primary",
-}: ButtonProps) {
-  const base = "px-4 py-2 rounded-lg font-medium transition-colors";
-  const variantClass = variantClasses[variant];
-
+  variant = "default",
+  disabled = false,
+  className = "",
+  ...props
+}: {
+  children: ReactNode;
+  variant?: "primary" | "danger" | "default";
+  disabled?: boolean;
+  className?: string;
+} & ButtonHTMLAttributes<HTMLButtonElement>) => {
   return (
     <button
-      role="button"
-      onClick={onClick}
-      className={`${base} ${variantClass} ${className ?? ""}`}
+      className={`
+        rounded-md px-4 py-2 font-medium transition-all duration-200
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:transform hover:scale-[1.02]'}
+        ${
+          variant === 'primary'
+            ? 'bg-primary text-base hover:bg-primary-hover'
+            : variant === 'danger'
+            ? 'bg-danger text-base hover:bg-danger-hover'
+            : 'bg-surface text-base hover:bg-surface-hover'
+        }
+        ${className}
+      `}
+      disabled={disabled}
+      {...props}
     >
       {children}
     </button>
   );
-}
+};

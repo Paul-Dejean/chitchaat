@@ -1,36 +1,38 @@
-type IconButtonProps = {
-  icon: React.ReactNode;
-  onClick: () => void;
-  "aria-label": string;
-  className?: string;
-  variant?: "primary" | "secondary" | "danger" | "muted";
-};
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
-const variantClasses: Record<NonNullable<IconButtonProps["variant"]>, string> = {
-  primary: "bg-primary text-inverted hover:bg-primary-hover",
-  secondary: "bg-surface text-base hover:bg-border",
-  danger: "bg-danger text-inverted hover:bg-red-600",
-  muted: "text-muted hover:text-base",
-};
-
-export function IconButton({
+export const IconButton = ({
   icon,
-  onClick,
-  className,
-  "aria-label": ariaLabel,
-  variant = "primary",
-}: IconButtonProps) {
-  const base = "p-2 rounded-full transition-colors";
-  const variantClass = variantClasses[variant];
-
+  variant = "default",
+  disabled = false,
+  ariaLabel,
+  className = "",
+  ...props
+}: {
+  icon: ReactNode;
+  variant?: "primary" | "danger" | "default";
+  disabled?: boolean;
+  ariaLabel?: string;
+  className?: string;
+} & ButtonHTMLAttributes<HTMLButtonElement>) => {
   return (
     <button
-      onClick={onClick}
+      className={`
+        p-2.5 rounded-full flex items-center justify-center transition-all duration-200
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${
+          variant === 'primary'
+            ? 'bg-primary text-base hover:bg-primary-hover'
+            : variant === 'danger'
+            ? 'bg-danger text-base hover:bg-danger-hover'
+            : 'bg-surface text-base hover:bg-surface-hover'
+        }
+        ${className}
+      `}
       aria-label={ariaLabel}
-      role="button"
-      className={`${base} ${variantClass} ${className ?? ""}`}
+      disabled={disabled}
+      {...props}
     >
       {icon}
     </button>
   );
-}
+};
