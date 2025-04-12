@@ -4,10 +4,10 @@ import fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    httpsOptions: {
-      key: fs.readFileSync('cert/10.40.119.136-key.pem'),
-      cert: fs.readFileSync('cert/10.40.119.136.pem'),
-    },
+    // httpsOptions: {
+    //   key: fs.readFileSync('cert/10.40.119.136-key.pem'),
+    //   cert: fs.readFileSync('cert/10.40.119.136.pem'),
+    // },
   });
 
   app.enableCors({
