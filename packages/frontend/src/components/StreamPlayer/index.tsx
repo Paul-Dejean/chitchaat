@@ -7,7 +7,6 @@ type StreamPlayerProps = {
   videoTrack: MediaStreamTrack | null;
   isAudioEnabled: boolean;
   displayName: string;
-  isMe: boolean;
 };
 
 export function StreamPlayer({

@@ -4,19 +4,19 @@ import { useNavigate } from "react-router";
 const Home = () => {
   const navigate = useNavigate();
 
-  const createMeeting =async  () => {
-
-      const { id: roomId } = await createRoom();
-      console.log({ redirect: `/rooms/?roomId=${roomId}` });
-      navigate(`/rooms?roomId=${roomId}`);
-
+  const createMeeting = async () => {
+    const { id: roomId } = await createRoom();
+    console.log({ redirect: `/rooms/?roomId=${roomId}` });
+    navigate(`/rooms?roomId=${roomId}`);
   };
 
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <header className="px-6 py-4 flex justify-between items-center">
         <div className="logo">
-          <h1 className="text-2xl font-heading font-bold text-primary">ChitChaat</h1>
+          <h1 className="text-2xl font-heading font-bold text-primary">
+            ChitChaat
+          </h1>
         </div>
       </header>
 
@@ -30,7 +30,8 @@ const Home = () => {
           </h2>
 
           <p className="text-xl leading-relaxed text-muted mb-10 max-w-2xl mx-auto">
-            Connect with anyone, anywhere through high-quality video meetings without the hassle of signups or downloads.
+            Connect with anyone, anywhere through high-quality video meetings
+            without the hassle of signups or downloads.
           </p>
 
           <button

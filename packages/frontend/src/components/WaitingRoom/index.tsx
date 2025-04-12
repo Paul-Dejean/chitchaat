@@ -36,9 +36,7 @@ export function WaitingRoom() {
   };
 
   const handleJoinRoom = () => {
-    // Handle joining the room here
     console.log("Joining the room as:", userName);
-    // Redirect to the actual room component or dispatch an action
   };
 
   return (
@@ -48,9 +46,8 @@ export function WaitingRoom() {
         <StreamPlayer
           audioTrack={null} // Replace with actual audio track
           videoTrack={videoStream?.getTracks()?.[0] ?? null} // Replace with actual video track
-          displayName={userName}
-          isMicrophoneEnabled={isMicOn}
-          isMe={true}
+          displayName={"You"}
+          isAudioEnabled={isMicOn}
         />
       </div>
 
