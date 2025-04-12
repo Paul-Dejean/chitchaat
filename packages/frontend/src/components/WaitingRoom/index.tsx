@@ -7,7 +7,11 @@ import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { IoVideocamOffOutline, IoVideocamOutline } from "react-icons/io5";
 import { StreamPlayer } from "../StreamPlayer";
 
-export function WaitingRoom() {
+export function WaitingRoom({
+  onJoinRoom,
+}: {
+  onJoinRoom: (userName: string) => void;
+}) {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
   const [isMicOn, setIsMicOn] = useState<boolean>(false);
@@ -36,11 +40,15 @@ export function WaitingRoom() {
   };
 
   const handleJoinRoom = () => {
-    console.log("Joining the room as:", userName);
+    if (userName) {
+      onJoinRoom(userName);
+    }
   };
 
+  console.log("waiting");
+
   return (
-    <div className="flex flex-col items-center max-w-4xl mx-auto p-8">
+    <div className="flex flex-col items-center  w-full p-8">
       <h2 className="text-3xl font-semibold mb-8">Waiting Room</h2>
       <div className="relative w-full max-w-2xl h-96 bg-black rounded-lg overflow-hidden mb-8">
         <StreamPlayer

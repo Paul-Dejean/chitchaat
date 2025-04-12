@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { types as MediasoupTypes } from 'mediasoup';
-import { DisplayNameGeneratorService } from '@/display-name-generator/display-name-generator.service';
 
 type Room = {
   id: string;
@@ -21,8 +20,6 @@ type Peer = {
 @Injectable()
 export class RoomsService {
   rooms: Room[] = [];
-
-  constructor(private displayNameGenerator: DisplayNameGeneratorService) {}
 
   getRoomById(roomId: string) {
     return this.rooms.find((room) => room.id === roomId) ?? null;
@@ -50,7 +47,7 @@ export class RoomsService {
     return room;
   }
 
-  joinRoom(roomId: string, newPeer: { id: string }) {
+  joinRoom(roomId: string, newPeer: { id: string; displayName: string }) {
     const room = this.getRoomById(roomId);
     if (!room) {
       throw new Error('Room not found');
@@ -58,14 +55,10 @@ export class RoomsService {
     if (room.peers.some((peer) => peer.id === newPeer.id)) {
       throw new Error('Peer has already joined the room');
     }
-    let displayName = this.displayNameGenerator.generateDisplayName();
-    while (room.peers.some((peer) => peer.displayName === displayName)) {
-      displayName = this.displayNameGenerator.generateDisplayName();
-    }
 
     const peer = {
       id: newPeer.id,
-      displayName,
+      displayName: newPeer.displayName,
       producers: [],
       consumers: [],
       transports: [],

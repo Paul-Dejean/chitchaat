@@ -83,11 +83,12 @@ export class MediasoupGateway
   async joinRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody(new ZodValidationPipe(joinRoomSchema))
-    { roomId }: JoinRoomDto,
+    { roomId, displayName }: JoinRoomDto,
   ) {
     await client.join(roomId);
     const { room, newPeer } = this.roomService.joinRoom(roomId, {
       id: client.id,
+      displayName,
     });
 
     this.server

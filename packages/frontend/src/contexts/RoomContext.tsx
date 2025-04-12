@@ -1,5 +1,5 @@
 import { RoomClient } from "@/lib/RoomClient";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext } from "react";
 import { store } from "@/store";
 
 const roomClient = new RoomClient({ store });
@@ -10,18 +10,7 @@ type RoomProviderProps = {
   roomId: string;
 };
 
-export const RoomProvider: React.FC<RoomProviderProps> = ({
-  children,
-  roomId,
-}) => {
-  useEffect(() => {
-    console.log("joining room");
-    roomClient.joinRoom(roomId);
-    return () => {
-      console.log("leaving room");
-      roomClient.leaveRoom();
-    };
-  }, [roomId]);
+export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   return (
     <RoomContext.Provider value={roomClient}>{children}</RoomContext.Provider>
   );

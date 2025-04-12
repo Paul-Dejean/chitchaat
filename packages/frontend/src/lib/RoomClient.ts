@@ -190,15 +190,16 @@ export class RoomClient {
     );
   }
 
-  async joinRoom(roomId: string) {
+  async joinRoom(roomId: string, userName: string) {
     this.state = RoomClientState.CONNECTING;
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTING));
 
     await this.wsClient.connect();
     this.initEventListeners();
 
-    const { room, displayName } = (await this.wsClient.emitMessage("joinRoom", {
+    const { room } = (await this.wsClient.emitMessage("joinRoom", {
       roomId,
+      displayName: userName,
     })) as {
       room: {
         peers: {
@@ -211,7 +212,7 @@ export class RoomClient {
       displayName: string;
     };
 
-    this.displayName = displayName;
+    this.displayName = userName;
 
     await this.mediasoupClient.initDevice(roomId);
     await this.mediasoupClient.initTransports();

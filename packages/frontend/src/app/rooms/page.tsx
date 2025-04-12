@@ -1,24 +1,58 @@
 import { VideoBoard } from "@/components/VideoBoard";
-import { RoomProvider } from "@/contexts/RoomContext";
+import { WaitingRoom } from "@/components/WaitingRoom";
+import { RoomProvider, useRoomClient } from "@/contexts/RoomContext";
 import { getRoomById } from "@/services/rooms";
+import { useState } from "react";
 import { useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 
 import useSWR from "swr";
 
 export default function RoomPage() {
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
+  const navigate = useNavigate();
+  const roomClient = useRoomClient();
 
-  const { data: room } = useSWR(roomId, getRoomById);
+  const [hasJoined, setHasJoined] = useState(false);
 
-  if (!room) {
-    return <div>Loading...</div>;
+  const { data: room, isLoading, error } = useSWR(roomId, getRoomById);
+
+  if (!roomId) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold">Error</h1>
+        <p>Room ID is required</p>
+        <button onClick={() => navigate("/")}>Go back</button>
+      </div>
+    );
   }
 
+  console.log({ error });
+
   return (
-    <RoomProvider roomId={room.id}>
-      <div className="h-screen max-h-dvh flex flex-col justify-start bg-background">
-        {room && <VideoBoard></VideoBoard>}
+    <RoomProvider roomId={roomId}>
+      <div className="h-screen max-h-dvh flex flex-col justify-start bg-green">
+        {isLoading && <div>Loading...</div>}
+
+        {error && (
+          <div>
+            <h1 className="text-3xl font-bold">Error</h1>
+            <p>{error.message}</p>
+            <button onClick={() => navigate("/")}>Go back</button>
+          </div>
+        )}
+
+        {!isLoading && !error && !hasJoined && (
+          <WaitingRoom
+            onJoinRoom={async (userName) => {
+              await roomClient.joinRoom(roomId, userName);
+              setHasJoined(true);
+            }}
+          />
+        )}
+
+        {!isLoading && !error && hasJoined && <VideoBoard />}
       </div>
     </RoomProvider>
   );

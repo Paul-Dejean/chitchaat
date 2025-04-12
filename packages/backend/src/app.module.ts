@@ -8,7 +8,6 @@ import { RoomsController } from './rooms/rooms.controller';
 import { RoomsService } from './rooms/rooms.service';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './logging/logging.interceptor';
-import { DisplayNameGeneratorService } from './display-name-generator/display-name-generator.service';
 import { TransportsService } from './transports/transports.service';
 import { ConsumersService } from './consumers/consumers.service';
 import { ProducersService } from './producers/producers.service';
@@ -28,7 +27,6 @@ import { DataProducersService } from './data-producers/data-producers.service';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-    DisplayNameGeneratorService,
     TransportsService,
     ConsumersService,
     ProducersService,

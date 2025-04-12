@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 export const joinRoomSchema = z.object({
   roomId: z.string(),
+  displayName: z.string().regex(/^[a-zA-Z0-9._]+$/, {
+    message:
+      'Username can only contain letters, numbers, dots, and underscores.',
+  }),
 });
 
 export type JoinRoomDto = z.infer<typeof joinRoomSchema>;
