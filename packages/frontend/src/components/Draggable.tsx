@@ -17,7 +17,6 @@ interface DraggableProps {
   onDragStart?: () => void;
   onDrag?: (x: number, y: number) => void;
   onDragEnd?: (x: number, y: number) => void;
-  scale?: number;
 }
 
 const DRAG_THRESHOLD = 5;

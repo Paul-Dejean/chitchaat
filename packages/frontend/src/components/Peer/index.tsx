@@ -61,12 +61,12 @@ export function Peer({
 
   return (
     <div
-      className={`relative group h-full w-full  flex justify-center items-center `}
+      className={`relative group h-full w-full  flex justify-center items-center ${isSpeaking && "border-2 border-primary"} rounded-lg `}
     >
       {audioTrack && <audio ref={audioRef} autoPlay={!isMe} />}
       {videoTrack ? (
         <video
-          className={`h-full w-full rounded-lg ${isSmallScreen ? "object-cover" : "object-fit"} ${isSpeaking && "border-2 border-primary"}`}
+          className={`h-full w-full ${isSmallScreen ? "object-cover" : "object-fit"} `}
           ref={videoRef}
           autoPlay
           muted
@@ -95,7 +95,7 @@ export function Peer({
       {isMe && nbParticipants >= 2 && (
         <div
           data-nodrag
-          className="group-hover:block hidden absolute bottom-0 right-0 bg-white p-1 rounded-lg"
+          className="group-hover:block hidden absolute bottom-0 right-0 bg-white text-primary p-1 rounded-lg"
         >
           {isExpanded ? (
             <LuMinimize2 size={20} onClick={onExpandClick} />

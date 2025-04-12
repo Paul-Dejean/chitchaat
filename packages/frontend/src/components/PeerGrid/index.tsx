@@ -37,9 +37,8 @@ type Peer = {
   isMe: boolean;
 };
 export function PeerGrid({ peers }: { peers: Peer[] }) {
-  console.log({ peers });
   const [meFloating, setMeFloating] = useState(false);
-  const [isSmallPreview, setIsSmallPreview] = useState(false);
+
   const nbParticipants = peers.length;
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
@@ -64,14 +63,8 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
           {meFloating && me && (
             <div
               {...touchHandlers}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsSmallPreview((smallPreview) => !smallPreview);
-              }}
-              className={`transform transition-all duration-300 ease-in-out origin-top-left ${
-                isSmallPreview ? "w-32 h-32" : "w-64 h-64"
-              }
-               `}
+              className={`transform transition-all duration-300 ease-in-out origin-top-left
+                 w-48 aspect-ratio-16/9`}
             >
               <Peer
                 audioTrack={me?.audioTrack}
