@@ -1,5 +1,4 @@
 import { MultiLineTextInput } from "@/ui-library/MultilineTextInput";
-import { TextInput } from "@/ui-library/TextInput";
 import { useState } from "react";
 import { BiChat, BiMessage } from "react-icons/bi";
 
