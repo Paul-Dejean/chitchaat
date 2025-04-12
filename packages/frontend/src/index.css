@@ -5,23 +5,47 @@
   --font-heading: 'Poppins', sans-serif;
 
   /* Colors */
---color-background: #121620; /* Darker background */
---color-surface: #1E2433; /* Dark surface that contrasts with background */
---color-primary: #5D5DFF; /* Vibrant purple primary */
---color-primary-hover: #4A4AE5; /* Darker purple for hover */
---color-secondary: #8B5CF6; /* Soft secondary purple */
---color-danger: #EF4444; /* Clear red for danger */
---color-border: #2E3446; /* Subtle border color */
---color-muted: #94A3B8; /* Muted text that's still readable */
---color-inverted: #FFFFFF; /* White for inverted elements */
---color-base: #E2E8F0; /* Off-white text that's easy on eyes */
---color-backdrop: rgb(0 0 0 / 0.7);
+  --color-background: #121620; /* Darker background */
+  --color-surface: #1E2433; /* Dark surface that contrasts with background */
+  --color-surface-2: #2A3344; /* Slightly lighter surface for layering */
+  --color-surface-3: #353E50; /* Even lighter surface for elevated components */
+
+  --color-primary: #5D5DFF; /* Vibrant purple primary */
+  --color-primary-hover: #4A4AE5; /* Darker purple for hover */
+  --color-primary-muted: #5D5DFF40; /* Transparent version for subtle UI elements */
+  --color-secondary: #8B5CF6; /* Soft secondary purple */
+  --color-secondary-hover: #7C4DF1; /* Darker secondary for hover */
+
+  /* Status colors */
+  --color-success: #10B981; /* Green for success states */
+  --color-warning: #F59E0B; /* Amber for warnings */
+  --color-info: #3B82F6; /* Blue for information */
+  --color-danger: #EF4444; /* Clear red for danger */
+
+  /* UI colors */
+  --color-border: #2E3446; /* Subtle border color */
+  --color-border-hover: #3E455C; /* Slightly lighter border for hover states */
+  --color-muted: #94A3B8; /* Muted text that's still readable */
+  --color-inverted: #FFFFFF; /* White for inverted elements */
+  --color-base: #E2E8F0; /* Off-white text that's easy on eyes */
+  --color-backdrop: rgb(0 0 0 / 0.7);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 350ms;
 }
 
 html {
   color: var(--color-base)
-
 }
+
 body {
   background-color: var(--color-background);
 }
