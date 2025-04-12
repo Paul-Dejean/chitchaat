@@ -5,6 +5,7 @@ export const IconButton = ({
   variant = "default",
   disabled = false,
   ariaLabel,
+  label,
   className = "",
   ...props
 }: {
@@ -13,6 +14,7 @@ export const IconButton = ({
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
+  label?: string;
 } & ButtonHTMLAttributes<HTMLButtonElement>) => {
   return (
     <button
@@ -33,6 +35,11 @@ export const IconButton = ({
       {...props}
     >
       {icon}
+      {label && (
+        <span className="ml-2 text-sm text-muted">
+          {label}
+        </span>
+      )}
     </button>
   );
 };
