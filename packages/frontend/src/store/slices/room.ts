@@ -47,13 +47,13 @@ export const roomSlice = createSlice({
     },
     toggleAudio: (
       state,
-      action: PayloadAction<{ shouldEnableAudio: boolean }>
+      action: PayloadAction<{ isMicrophoneEnabled: boolean }>
     ) => {
       console.log(action);
-      if (action.payload.shouldEnableAudio === state.isMicrophoneEnabled) {
+      if (action.payload.isMicrophoneEnabled === state.isMicrophoneEnabled) {
         return;
       }
-      state.isMicrophoneEnabled = action.payload.shouldEnableAudio;
+      state.isMicrophoneEnabled = action.payload.isMicrophoneEnabled;
     },
     toggleScreenSharing: (
       state,

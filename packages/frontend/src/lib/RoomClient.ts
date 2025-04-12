@@ -86,7 +86,7 @@ export class RoomClient {
     this.wsClient.registerHandler("producerResumed", ({ producerId }) => {
       if (producerId === this.microphoneProducer?.id) {
         this.store.dispatch(
-          roomActions.toggleAudio({ shouldEnableAudio: true })
+          roomActions.toggleAudio({ isMicrophoneEnabled: true })
         );
       }
     });
@@ -343,14 +343,18 @@ export class RoomClient {
     );
   }
 
-  async enableMicrophone() {
+  async enableMicrophone({ produce = true }: { produce?: boolean } = {}) {
     if (this.microphoneProducer) {
+      await this.mediasoupClient.resumeProducer(this.microphoneProducer.id);
       return this.localMedia.getAudioStream();
     }
     const stream = await this.localMedia.getAudioStream();
     const track = stream.getAudioTracks()[0];
-    this.microphoneProducer = await this.mediasoupClient.createProducer(track);
-    this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
+    if (produce) {
+      this.microphoneProducer =
+        await this.mediasoupClient.createProducer(track);
+    }
+    this.store.dispatch(roomActions.toggleAudio({ isMicrophoneEnabled: true }));
     return stream;
   }
 
@@ -358,10 +362,12 @@ export class RoomClient {
     if (this.microphoneProducer) {
       await this.mediasoupClient.pauseProducer(this.microphoneProducer.id);
       this.store.dispatch(
-        roomActions.toggleAudio({ shouldEnableAudio: false })
+        roomActions.toggleAudio({ isMicrophoneEnabled: false })
       );
     }
-    this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: false }));
+    this.store.dispatch(
+      roomActions.toggleAudio({ isMicrophoneEnabled: false })
+    );
   }
 
   async enableChatDataProducer() {

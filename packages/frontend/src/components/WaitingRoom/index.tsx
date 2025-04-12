@@ -2,11 +2,12 @@ import { Button } from "@/ui-library/Button";
 import { IconButton } from "@/ui-library/IconButton";
 import { TextInput } from "@/ui-library/TextInput";
 
+import { useRoomClient } from "@/contexts/RoomContext";
+import { useSelector } from "@/store";
 import { useState } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { IoVideocamOffOutline, IoVideocamOutline } from "react-icons/io5";
 import { StreamPlayer } from "../StreamPlayer";
-import { useRoomClient } from "@/contexts/RoomContext";
 
 export function WaitingRoom({
   onJoinRoom,
@@ -18,33 +19,39 @@ export function WaitingRoom({
   }) => void;
 }) {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
-  const [isMicOn, setIsMicOn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const roomClient = useRoomClient();
+  const isMicrophoneEnabled = useSelector(
+    (state) => state.room.isMicrophoneEnabled
+  );
+
+  const isCameraEnabled = useSelector((state) => state.room.isCameraEnabled);
 
   const toggleCamera = async () => {
-    if (!isCameraOn) {
+    if (!isCameraEnabled) {
       const stream = await roomClient.enableWebcam({ produce: false });
       setVideoStream(stream);
-      setIsCameraOn((isCameraOn) => !isCameraOn);
     } else {
-      if (videoStream) {
-        videoStream.getTracks().forEach((track) => track.stop());
-      }
+      await roomClient.disableWebcam();
       setVideoStream(null);
-      setIsCameraOn((isCameraOn) => !isCameraOn);
     }
   };
 
   const toggleMic = () => {
-    setIsMicOn((isMicOn) => !isMicOn);
+    if (!isMicrophoneEnabled) {
+      roomClient.enableMicrophone({ produce: false });
+    } else {
+      roomClient.disableMicrophone();
+    }
   };
 
   const handleJoinRoom = () => {
-    if (userName) {
-      onJoinRoom({ userName, isCameraOn, isMicOn });
-    }
+    if (!userName) return;
+    onJoinRoom({
+      userName,
+      isMicOn: isMicrophoneEnabled,
+      isCameraOn: isCameraEnabled,
+    });
   };
 
   console.log("waiting");
@@ -57,17 +64,21 @@ export function WaitingRoom({
           audioTrack={null} // Replace with actual audio track
           videoTrack={videoStream?.getTracks()?.[0] ?? null} // Replace with actual video track
           displayName={"You"}
-          isAudioEnabled={isMicOn}
+          isAudioEnabled={isMicrophoneEnabled}
         />
       </div>
 
       <div className="flex gap-4 mb-12 w-full max-w-2xl justify-center">
         <IconButton
           icon={
-            isMicOn ? <BiMicrophone size={22} /> : <BiMicrophoneOff size={22} />
+            isMicrophoneEnabled ? (
+              <BiMicrophone size={22} />
+            ) : (
+              <BiMicrophoneOff size={22} />
+            )
           }
           aria-label="Toggle Microphone"
-          variant={isMicOn ? "primary" : "danger"}
+          variant={isMicrophoneEnabled ? "primary" : "danger"}
           onClick={() => {
             toggleMic();
           }}
@@ -75,14 +86,14 @@ export function WaitingRoom({
         />
         <IconButton
           icon={
-            isCameraOn ? (
+            isCameraEnabled ? (
               <IoVideocamOutline size={22} />
             ) : (
               <IoVideocamOffOutline size={22} />
             )
           }
           aria-label="Toggle Video"
-          variant={isCameraOn ? "primary" : "danger"}
+          variant={isCameraEnabled ? "primary" : "danger"}
           onClick={() => {
             toggleCamera();
           }}
