@@ -1,13 +1,9 @@
-import React, { TextareaHTMLAttributes } from "react";
+import { InputHTMLAttributes } from "react";
 
-type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  icon?: React.ReactNode;
-};
-
-export function TextInput({ ...props }: TextareaProps) {
+export function TextInput({ ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <textarea
-      className="px-2 resize-none border-sky-700 border rounded-lg field-sizing-content w-full"
+    <input
+      className="px-2 resize-none border-sky-700 border rounded-lg"
       {...props}
     />
   );

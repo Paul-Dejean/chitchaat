@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=https://localhost:3001
+      - VITE_API_URL=https://10.46.177.136:3001
       # - VITE_API_URL=https://10.40.119.136:3001
     volumes:
       - ./packages/frontend:/app
@@ -28,7 +28,7 @@ services:
       - ./packages/backend:/app
       - backend_node_modules:/app/node_modules
     environment:
-      - MEDIASOUP_ANNOUNCED_IPV4_ADDRESS=10.40.119.136
+      - MEDIASOUP_ANNOUNCED_IPV4_ADDRESS=10.46.177.136
 
 volumes:
   backend_node_modules:

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useRoomClient } from "@/contexts/RoomContext";
 
@@ -90,13 +90,8 @@ export function VideoBoard() {
     };
   });
 
-  useEffect(() => {
-    return () => {
-      roomClient.leaveRoom();
-    };
-  }, [roomClient]);
-
   async function onEndCallClick() {
+    await roomClient.leaveRoom();
     navigate("/");
   }
 

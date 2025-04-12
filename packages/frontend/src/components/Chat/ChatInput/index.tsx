@@ -1,3 +1,4 @@
+import { MultiLineTextInput } from "@/ui-library/MultilineTextInput";
 import { TextInput } from "@/ui-library/TextInput";
 import { useState } from "react";
 import { BiChat, BiMessage } from "react-icons/bi";
@@ -18,7 +19,7 @@ export function ChatInput({
   }
   return (
     <div className="flex gap-x-2 p-2 items-center bg-surface rounded-lg">
-      <TextInput
+      <MultiLineTextInput
         value={message}
         icon={<BiChat className="text-primary" size={20} />}
         onKeyDown={(event) => {

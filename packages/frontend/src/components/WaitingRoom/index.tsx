@@ -50,7 +50,7 @@ export function WaitingRoom({
   return (
     <div className="flex flex-col items-center  w-full p-8">
       <h2 className="text-3xl font-semibold mb-8">Waiting Room</h2>
-      <div className="relative w-full max-w-2xl h-96 bg-black rounded-lg overflow-hidden mb-8">
+      <div className="relative w-full max-w-2xl h-96 bg-black rounded-lg overflow-hidden mb-4">
         <StreamPlayer
           audioTrack={null} // Replace with actual audio track
           videoTrack={videoStream?.getTracks()?.[0] ?? null} // Replace with actual video track
@@ -59,7 +59,7 @@ export function WaitingRoom({
         />
       </div>
 
-      <div className="flex gap-4 mb-6 w-full max-w-2xl justify-center">
+      <div className="flex gap-4 mb-12 w-full max-w-2xl justify-center">
         <IconButton
           icon={
             isMicOn ? <BiMicrophone size={22} /> : <BiMicrophoneOff size={22} />
@@ -88,7 +88,7 @@ export function WaitingRoom({
         />
       </div>
 
-      <div className="mb-6 w-full max-w-2xl">
+      <div className="mb-6 w-full max-w-md">
         <TextInput
           placeholder="Enter your name"
           value={userName}
