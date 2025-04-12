@@ -1,11 +1,15 @@
+import { createRoom } from "@/services/rooms";
 import { useNavigate } from "react-router";
 
 const Home = () => {
   const navigate = useNavigate();
 
-  const createMeeting = () => {
-    // Navigate to the rooms page to create a new meeting
-    navigate("/rooms");
+  const createMeeting =async  () => {
+
+      const { id: roomId } = await createRoom();
+      console.log({ redirect: `/rooms/?roomId=${roomId}` });
+      navigate(`/rooms?roomId=${roomId}`);
+
   };
 
   return (
@@ -37,16 +41,16 @@ const Home = () => {
             Start a Meeting Now
           </button>
 
-          <div className="flex flex-col md:flex-row justify-center gap-8 mt-12">
-            <div className="flex items-center gap-2 text-lg text-inverted">
+          <div className="flex flex-col items-center md:flex-row justify-center gap-8 mt-12">
+            <div className="flex items-center gap-2 text-md text-muted">
               <span className="text-2xl">🔒</span>
               <span>Secure Connections</span>
             </div>
-            <div className="flex items-center gap-2 text-lg text-inverted">
+            <div className="flex items-center gap-2 text-md text-muted">
               <span className="text-2xl">⚡</span>
               <span>Instant Setup</span>
             </div>
-            <div className="flex items-center gap-2 text-lg text-inverted">
+            <div className="flex items-center gap-2 text-md text-muted">
               <span className="text-2xl">👥</span>
               <span>Multiple Participants</span>
             </div>
