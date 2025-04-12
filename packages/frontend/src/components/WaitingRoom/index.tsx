@@ -6,6 +6,7 @@ import { useState } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { IoVideocamOffOutline, IoVideocamOutline } from "react-icons/io5";
 import { StreamPlayer } from "../StreamPlayer";
+import { useRoomClient } from "@/contexts/RoomContext";
 
 export function WaitingRoom({
   onJoinRoom,
@@ -20,14 +21,11 @@ export function WaitingRoom({
   const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
   const [isMicOn, setIsMicOn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
+  const roomClient = useRoomClient();
 
   const toggleCamera = async () => {
     if (!isCameraOn) {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-        },
-      });
+      const stream = await roomClient.enableWebcam({ produce: false });
       setVideoStream(stream);
       setIsCameraOn((isCameraOn) => !isCameraOn);
     } else {

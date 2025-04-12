@@ -11,6 +11,7 @@ import {
 } from "mediasoup-client/lib/types";
 import { MediasoupClient } from "./MediasoupClient";
 import { WsClient } from "./WsClient";
+import { LocalMedia } from "./LocalMedia";
 
 export enum RoomClientState {
   NEW = "NEW",
@@ -33,6 +34,7 @@ export class RoomClient {
   private displayName: string | null = null;
 
   public state: RoomClientState = RoomClientState.NEW;
+  public localMedia = new LocalMedia();
 
   constructor({ store }: { store: Store }) {
     this.store = store;
@@ -286,27 +288,30 @@ export class RoomClient {
     this.store.dispatch(roomActions.leaveRoom());
   }
 
-  async enableWebcam() {
+  async enableWebcam({ produce = true }: { produce?: boolean } = {}) {
     if (this.desktopProducer) {
       await this.disableScreenSharing();
     }
     if (this.videoProducer) {
-      this.mediasoupClient.resumeProducer(this.videoProducer.id);
-    } else {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      const track = stream.getVideoTracks()[0];
+      return this.localMedia.getVideoStream();
+    }
+    const stream = await this.localMedia.getVideoStream();
+    const track = stream.getVideoTracks()[0];
+    if (produce) {
       this.videoProducer = await this.mediasoupClient.createProducer(track);
     }
+    this.store.dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
+    return stream;
   }
 
   async disableWebcam() {
     if (this.videoProducer) {
+      this.localMedia.stopVideoStream();
       this.videoProducer.close();
       this.mediasoupClient.closeProducer(this.videoProducer.id);
       this.videoProducer = null;
     }
+    this.store.dispatch(roomActions.toggleVideo({ shouldEnableVideo: false }));
   }
 
   async enableScreenSharing() {
@@ -314,34 +319,39 @@ export class RoomClient {
       await this.disableWebcam();
     }
     if (this.desktopProducer) {
-      this.mediasoupClient.resumeProducer(this.desktopProducer.id);
-    } else {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
-      const track = stream.getVideoTracks()[0];
-      this.desktopProducer = await this.mediasoupClient.createProducer(track);
-      this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
-      return stream;
+      return this.localMedia.getScreenStream();
     }
+    const stream = await this.localMedia.getScreenStream();
+    const track = stream.getVideoTracks()[0];
+    this.desktopProducer = await this.mediasoupClient.createProducer(track);
+    this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
+    this.store.dispatch(
+      roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
+    );
+    return stream;
   }
 
   async disableScreenSharing() {
     if (this.desktopProducer) {
+      this.localMedia.stopScreenStream();
       this.desktopProducer.close();
       this.mediasoupClient.closeProducer(this.desktopProducer.id);
       this.desktopProducer = null;
     }
+    this.store.dispatch(
+      roomActions.toggleScreenSharing({ shouldEnableScreenSharing: false })
+    );
   }
 
   async enableMicrophone() {
     if (this.microphoneProducer) {
       await this.mediasoupClient.resumeProducer(this.microphoneProducer.id);
     } else {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await this.localMedia.getAudioStream();
       const track = stream.getAudioTracks()[0];
       this.microphoneProducer =
         await this.mediasoupClient.createProducer(track);
+      this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
     }
   }
 
@@ -352,6 +362,7 @@ export class RoomClient {
         roomActions.toggleAudio({ shouldEnableAudio: false })
       );
     }
+    this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: false }));
   }
 
   async enableChatDataProducer() {
@@ -383,5 +394,12 @@ export class RoomClient {
         sender: this.displayName!,
       })
     );
+  }
+
+  public getCurrentVideoStream() {
+    if (this.localMedia.isVideoStreamActive()) {
+      return this.localMedia.getVideoStream();
+    }
+    return null;
   }
 }

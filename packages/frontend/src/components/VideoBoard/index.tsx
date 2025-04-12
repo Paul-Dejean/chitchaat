@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRoomClient } from "@/contexts/RoomContext";
 
@@ -15,30 +15,8 @@ import { InviteGuest } from "../InviteGuest";
 import { PeerGrid } from "../PeerGrid";
 import { VideoBoardControls } from "../VideoBoardControls";
 import { useNavigate } from "react-router";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { isMobileDevice } from "@/utils/device";
-
-async function getVideoStream(isPortrait: boolean) {
-  const isMobile = isMobileDevice();
-
-  console.log({ supported: navigator.mediaDevices.getSupportedConstraints() });
-  const constraints = {
-    video: {
-      // width: isMobile && isPortrait ? 720 : 1280,
-      // height: isMobile && isPortrait ? 1280 : 720,
-      // aspectRatio: isMobile && isPortrait ? 9 / 16 : 16 / 9,
-      facingMode: "user",
-    },
-  };
-  console.log({ isPortrait, isMobile });
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  // const track = stream.getVideoTracks()[0];
-  // console.log(track.getSettings());
-  // await track.applyConstraints({
-  //   aspectRatio: isMobile && isPortrait ? 9 / 16 : 16 / 9,
-  // });
-  return stream;
-}
+import { set } from "react-hook-form";
 
 export function VideoBoard() {
   const navigate = useNavigate();
@@ -58,8 +36,17 @@ export function VideoBoard() {
   );
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
 
+  useEffect(() => {
+    async function setupStream() {
+      const stream = await roomClient.getCurrentVideoStream();
+      if (stream) {
+        setCurrentStream(stream);
+      }
+    }
+    setupStream();
+  }, []);
+
   const dispatch = useDispatch();
-  const isPortrait = useMediaQuery("(orientation: portrait)");
 
   const allPeers = Object.values(peers).map((peer) => {
     if (peer.isMe) {
@@ -98,19 +85,14 @@ export function VideoBoard() {
   async function onToggleVideoClick() {
     if (!isCameraEnabled) {
       try {
-        const stream = await getVideoStream(isPortrait);
+        const stream = await roomClient.enableWebcam();
         setCurrentStream(stream);
-        await roomClient.enableWebcam();
-        dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
-      const track = currentStream?.getVideoTracks()[0];
-      track?.stop();
-      setCurrentStream(null);
       await roomClient.disableWebcam();
-      dispatch(roomActions.toggleVideo({ shouldEnableVideo: false }));
+      setCurrentStream(null);
     }
   }
 
@@ -118,13 +100,11 @@ export function VideoBoard() {
     if (!isMicrophoneEnabled) {
       try {
         await roomClient.enableMicrophone();
-        dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableMicrophone();
-      dispatch(roomActions.toggleAudio({ shouldEnableAudio: false }));
     }
   }
 
@@ -135,21 +115,12 @@ export function VideoBoard() {
         if (stream) {
           setCurrentStream(stream);
         }
-
-        dispatch(
-          roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
-        );
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
-      const track = currentStream?.getVideoTracks()[0];
-      track?.stop();
-      setCurrentStream(null);
       await roomClient.disableScreenSharing();
-      dispatch(
-        roomActions.toggleScreenSharing({ shouldEnableScreenSharing: false })
-      );
+      setCurrentStream(null);
     }
   }
 
