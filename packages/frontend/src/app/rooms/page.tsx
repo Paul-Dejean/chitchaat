@@ -28,16 +28,16 @@ export default function RoomPage() {
     );
   }
 
-  console.log({ error });
+  const hasError = !isLoading && (error || !room);
 
   return (
     <RoomProvider roomId={roomId}>
       <div className="h-screen max-h-dvh flex flex-col justify-start bg-green">
         {isLoading && <div>Loading...</div>}
 
-        {error && (
+        {hasError && (
           <div>
-            <h1 className="text-3xl font-bold">Error</h1>
+            <h1 className="text-3xl font-bold">This room does not exist</h1>
             <p>{error.message}</p>
             <button onClick={() => navigate("/")}>Go back</button>
           </div>
