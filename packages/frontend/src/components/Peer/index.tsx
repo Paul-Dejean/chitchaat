@@ -1,5 +1,6 @@
+import { useIsSpeaking } from "@/hooks/useIsSpeaking";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { LuExpand, LuMinimize2 } from "react-icons/lu";
 
@@ -30,6 +31,17 @@ export function Peer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
+  const audioStream = useMemo(() => {
+    if (audioTrack) {
+      return new MediaStream([audioTrack]);
+    }
+    return null;
+  }, [audioTrack]);
+  console.log(audioStream);
+
+  const isSpeaking = useIsSpeaking(audioStream);
+  console.log({ isSpeaking });
+
   useEffect(() => {
     if (videoRef.current && videoTrack) {
       console.log("setting video track", { videoTrack });
@@ -42,17 +54,19 @@ export function Peer({
   }, [videoTrack]);
 
   useEffect(() => {
-    if (audioRef.current && audioTrack) {
-      audioRef.current.srcObject = new MediaStream([audioTrack]);
+    if (audioRef.current && audioStream && !isMe) {
+      audioRef.current.srcObject = audioStream;
     }
-  }, [audioTrack]);
+  }, [audioStream, isMe]);
 
   return (
-    <div className="relative group h-full w-full  flex justify-center items-center ">
-      {audioTrack && <audio ref={audioRef} autoPlay />}
+    <div
+      className={`relative group h-full w-full  flex justify-center items-center `}
+    >
+      {audioTrack && <audio ref={audioRef} autoPlay={!isMe} />}
       {videoTrack ? (
         <video
-          className={`h-full w-full rounded-lg ${isSmallScreen ? "object-cover" : "object-fit"}`}
+          className={`h-full w-full rounded-lg ${isSmallScreen ? "object-cover" : "object-fit"} ${isSpeaking && "border-2 border-primary"}`}
           ref={videoRef}
           autoPlay
           muted
@@ -88,6 +102,11 @@ export function Peer({
           ) : (
             <LuExpand size={20} onClick={onExpandClick} />
           )}
+        </div>
+      )}
+      {isSpeaking && (
+        <div className="absolute bottom-2 left-2 bg-primary rounded-full p-1">
+          <BiMicrophone size={25} />
         </div>
       )}
     </div>

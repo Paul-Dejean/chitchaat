@@ -33,13 +33,18 @@ export function VideoBoard() {
   const isScreenSharingEnabled = useSelector(
     (state) => state.room.isScreenSharingEnabled
   );
-  const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     async function setupStream() {
-      const stream = await roomClient.getCurrentVideoStream();
-      if (stream) {
-        setCurrentStream(stream);
+      const videoStream = await roomClient.getCurrentVideoStream();
+      if (videoStream) {
+        setVideoStream(videoStream);
+      }
+      const audioStream = await roomClient.getCurrentAudioStream();
+      if (audioStream) {
+        setAudioStream(audioStream);
       }
     }
     setupStream();
@@ -52,8 +57,8 @@ export function VideoBoard() {
       return {
         id: peer.id,
         displayName: peer.displayName,
-        audioTrack: null,
-        videoTrack: currentStream?.getVideoTracks()[0] || null,
+        audioTrack: audioStream?.getAudioTracks()[0] || null,
+        videoTrack: videoStream?.getVideoTracks()[0] || null,
         isMicrophoneEnabled: isMicrophoneEnabled,
         isMe: true,
       };
@@ -62,6 +67,7 @@ export function VideoBoard() {
       (consumer) =>
         consumer.peerId === peer.id && consumer.track.kind === "audio"
     )?.[0];
+
     const videoConsumer = consumers.filter(
       (consumer) =>
         consumer.peerId === peer.id && consumer.track.kind === "video"
@@ -85,25 +91,27 @@ export function VideoBoard() {
     if (!isCameraEnabled) {
       try {
         const stream = await roomClient.enableWebcam();
-        setCurrentStream(stream);
+        setVideoStream(stream);
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableWebcam();
-      setCurrentStream(null);
+      setVideoStream(null);
     }
   }
 
   async function onToggleAudioClick() {
     if (!isMicrophoneEnabled) {
       try {
-        await roomClient.enableMicrophone();
+        const stream = await roomClient.enableMicrophone();
+        setAudioStream(stream);
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableMicrophone();
+      setAudioStream(null);
     }
   }
 
@@ -112,14 +120,14 @@ export function VideoBoard() {
       try {
         const stream = await roomClient.enableScreenSharing();
         if (stream) {
-          setCurrentStream(stream);
+          setVideoStream(stream);
         }
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableScreenSharing();
-      setCurrentStream(null);
+      setVideoStream(null);
     }
   }
 

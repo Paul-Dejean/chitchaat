@@ -13,6 +13,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.0",
     "@tailwindcss/vite": "^4.0.14",
+    "hark": "^1.2.3",
     "mediasoup-client": "^3.7.18",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
@@ -29,6 +30,7 @@
     "@eslint/eslintrc": "^3",
     "@eslint/js": "^9.21.0",
     "@tailwindcss/postcss": "^4.0.3",
+    "@types/hark": "^1.2.5",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.10",

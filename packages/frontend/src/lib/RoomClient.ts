@@ -345,14 +345,13 @@ export class RoomClient {
 
   async enableMicrophone() {
     if (this.microphoneProducer) {
-      await this.mediasoupClient.resumeProducer(this.microphoneProducer.id);
-    } else {
-      const stream = await this.localMedia.getAudioStream();
-      const track = stream.getAudioTracks()[0];
-      this.microphoneProducer =
-        await this.mediasoupClient.createProducer(track);
-      this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
+      return this.localMedia.getAudioStream();
     }
+    const stream = await this.localMedia.getAudioStream();
+    const track = stream.getAudioTracks()[0];
+    this.microphoneProducer = await this.mediasoupClient.createProducer(track);
+    this.store.dispatch(roomActions.toggleAudio({ shouldEnableAudio: true }));
+    return stream;
   }
 
   async disableMicrophone() {
@@ -401,5 +400,11 @@ export class RoomClient {
       return this.localMedia.getVideoStream();
     }
     return null;
+  }
+
+  public getCurrentAudioStream() {
+    if (this.localMedia.isAudioStreamActive()) {
+      return this.localMedia.getAudioStream();
+    }
   }
 }
