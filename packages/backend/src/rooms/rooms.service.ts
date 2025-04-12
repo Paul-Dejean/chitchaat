@@ -80,10 +80,11 @@ export class RoomsService {
     if (!peer) return;
     peer.transports.forEach((transport) => transport.close());
     room.peers = room.peers.filter((peer) => peer.id !== peerId);
-    if (room.peers.length === 0) {
-      room.router.close();
-      room.isClosed = true;
-    }
+    // if (room.peers.length === 0) {
+
+    //   room.router.close();
+    //   room.isClosed = true;
+    // }
   }
 
   getTransportById(roomId: string, transportId: string) {
