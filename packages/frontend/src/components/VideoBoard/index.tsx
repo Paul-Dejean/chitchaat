@@ -16,7 +16,6 @@ import { PeerGrid } from "../PeerGrid";
 import { VideoBoardControls } from "../VideoBoardControls";
 import { useNavigate } from "react-router";
 import { isMobileDevice } from "@/utils/device";
-import { set } from "react-hook-form";
 
 export function VideoBoard() {
   const navigate = useNavigate();

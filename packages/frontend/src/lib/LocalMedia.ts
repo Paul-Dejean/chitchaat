@@ -3,8 +3,6 @@ export class LocalMedia {
   private videoStream: MediaStream | null = null;
   private screenStream: MediaStream | null = null;
   private isVideoEnabled = false;
-  private isAudioEnabled = false;
-  private isScreenEnabled = false;
 
   public async getAudioStream(): Promise<MediaStream> {
     if (!this.audioStream) {
@@ -13,7 +11,7 @@ export class LocalMedia {
         video: false,
       });
     }
-    this.isAudioEnabled = true;
+
     return this.audioStream;
   }
 
@@ -22,7 +20,6 @@ export class LocalMedia {
       this.audioStream.getTracks().forEach((track) => track.stop());
       this.audioStream = null;
     }
-    this.isAudioEnabled = false;
   }
 
   public async getVideoStream(): Promise<MediaStream> {
@@ -52,7 +49,7 @@ export class LocalMedia {
         video: true,
       });
     }
-    this.isScreenEnabled = true;
+
     return this.screenStream;
   }
 
@@ -61,7 +58,6 @@ export class LocalMedia {
       this.screenStream.getTracks().forEach((track) => track.stop());
       this.screenStream = null;
     }
-    this.isAudioEnabled = true;
   }
 
   public isVideoStreamActive() {
