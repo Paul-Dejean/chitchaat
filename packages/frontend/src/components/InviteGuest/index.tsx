@@ -23,15 +23,17 @@ export function InviteGuest({ url }: { url: string }) {
   };
 
   return (
-    <div className="bg-white rounder-lg p-4 flex flex-col gap-8">
+    <div className="bg-white rounder-lg p-4 flex flex-col gap-8 text-black">
       <div className="flex flex-col gap-4">
-        <h2 className="font-bold">
+        <h2 className="font-bold ">
           You can invite guests by sharing this QR Code
         </h2>
         <canvas ref={canvasRef} className="mx-auto"></canvas>
         <h2 className="font-bold">Or by sharing this url</h2>
         <div className="flex items-center gap-2 p-2 border rounded-lg bg-surface w-fit">
-          <span className="text-sm font-mono max-w-xs mr-2">{url}</span>
+          <span className="text-sm font-mono max-w-xs mr-2 text-base">
+            {url}
+          </span>
           <button onClick={handleCopy}>
             {copied ? (
               <LuCheck className="text-green-500" />
