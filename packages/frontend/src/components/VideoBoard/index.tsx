@@ -175,12 +175,10 @@ export function VideoBoard() {
           isMobileDevice()
             ? {
                 position: "absolute",
-                backgroundColor: "var(--color-gray-700)",
                 top: 0,
                 transform: `translateY(${areControlsVisibles ? "0px" : "-100%"})`,
                 transition: "transform 0.3s ease, opacity 0.3s ease",
                 borderRadius: "0px 0px 20px 20px",
-                border: "1px solid black",
               }
             : { visibility: "visible" }
         }
@@ -212,12 +210,11 @@ export function VideoBoard() {
           isMobileDevice()
             ? {
                 position: "absolute",
-                backgroundColor: "var(--color-gray-700)",
+
                 bottom: 0,
                 transform: `translateY(${areControlsVisibles ? "0px" : "100%"})`,
                 transition: "transform 0.3s ease, opacity 0.3s ease",
                 borderRadius: "20px 20px 0px 0px",
-                border: "1px solid black",
               }
             : { visibility: "visible" }
         }
