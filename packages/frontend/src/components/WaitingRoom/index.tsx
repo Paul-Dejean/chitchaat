@@ -10,7 +10,11 @@ import { StreamPlayer } from "../StreamPlayer";
 export function WaitingRoom({
   onJoinRoom,
 }: {
-  onJoinRoom: (userName: string) => void;
+  onJoinRoom: (settings: {
+    userName: string;
+    isMicOn: boolean;
+    isCameraOn: boolean;
+  }) => void;
 }) {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
@@ -41,7 +45,7 @@ export function WaitingRoom({
 
   const handleJoinRoom = () => {
     if (userName) {
-      onJoinRoom(userName);
+      onJoinRoom({ userName, isCameraOn, isMicOn });
     }
   };
 

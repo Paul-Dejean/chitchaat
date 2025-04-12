@@ -45,8 +45,15 @@ export default function RoomPage() {
 
         {!isLoading && !error && !hasJoined && (
           <WaitingRoom
-            onJoinRoom={async (userName) => {
+            onJoinRoom={async ({ userName, isCameraOn, isMicOn }) => {
               await roomClient.joinRoom(roomId, userName);
+              console.log({ userName, isCameraOn, isMicOn });
+              if (isCameraOn) {
+                await roomClient.enableWebcam();
+              }
+              if (isMicOn) {
+                await roomClient.enableMicrophone();
+              }
               setHasJoined(true);
             }}
           />
