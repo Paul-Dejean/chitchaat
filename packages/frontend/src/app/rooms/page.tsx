@@ -49,8 +49,8 @@ export default function RoomPage() {
         </Toaster>
         {isLoading && <div>Loading...</div>}
         {hasError && (
-          <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-4 py-12 text-center">
-            <div className="bg-white shadow-xl rounded-2xl p-8 w-full">
+          <div className="flex flex-col items-center justify-center fixed inset-0  px-4 py-12 text-center">
+            <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
