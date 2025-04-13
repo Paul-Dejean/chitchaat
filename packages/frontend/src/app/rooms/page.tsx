@@ -3,6 +3,7 @@ import { WaitingRoom } from "@/components/WaitingRoom";
 import { RoomProvider, useRoomClient } from "@/contexts/RoomContext";
 import { getRoomById } from "@/services/rooms";
 import { useState } from "react";
+import { Toaster, resolveValue } from "react-hot-toast";
 import { useSearchParams } from "react-router";
 import { useNavigate } from "react-router";
 
@@ -34,7 +35,6 @@ export default function RoomPage() {
     <RoomProvider roomId={roomId}>
       <div className="h-screen max-h-dvh flex flex-col justify-start bg-green">
         {isLoading && <div>Loading...</div>}
-
         {hasError && (
           <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-4 py-12 text-center">
             <div className="bg-white shadow-xl rounded-2xl p-8 w-full">
@@ -69,7 +69,6 @@ export default function RoomPage() {
             </div>
           </div>
         )}
-
         {!isLoading && !error && !hasJoined && (
           <WaitingRoom
             onJoinRoom={async ({ userName, isCameraOn, isMicOn }) => {
@@ -85,7 +84,6 @@ export default function RoomPage() {
             }}
           />
         )}
-
         {!isLoading && !error && hasJoined && <MeetingBoard />}
       </div>
     </RoomProvider>

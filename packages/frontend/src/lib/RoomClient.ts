@@ -194,6 +194,7 @@ export class RoomClient {
   }
 
   async joinRoom(roomId: string, userName: string) {
+    this.store.dispatch(roomActions.resetRoom());
     this.state = RoomClientState.CONNECTING;
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTING));
 
@@ -286,7 +287,7 @@ export class RoomClient {
   leaveRoom() {
     this.mediasoupClient.closeTransports();
     this.wsClient.disconnect();
-    this.store.dispatch(roomActions.leaveRoom());
+    this.store.dispatch(roomActions.resetRoom());
   }
 
   async enableWebcam({ produce = true }: { produce?: boolean } = {}) {

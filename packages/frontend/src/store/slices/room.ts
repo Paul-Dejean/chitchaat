@@ -78,6 +78,7 @@ export const roomSlice = createSlice({
 
     addPeer: (state, action: PayloadAction<Peer>) => {
       state.peers[action.payload.id] = action.payload;
+      console.log({ peers: state.peers });
     },
 
     removePeer: (state, action: PayloadAction<{ peerId: string }>) => {
@@ -125,7 +126,7 @@ export const roomSlice = createSlice({
     updateState: (state, action: PayloadAction<RoomClientState>) => {
       state.state = action.payload;
     },
-    leaveRoom: () => {
+    resetRoom: () => {
       return initialState;
     },
     addChatMessage: (
