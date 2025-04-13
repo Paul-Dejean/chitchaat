@@ -152,7 +152,7 @@ export function MeetingBoard() {
           Invite Guests
         </Button>
       </div>
-      <div className="flex flex-1">
+      <div className="flex flex-1 px-2">
         <div className="w-full h-full">
           <PeerGrid peers={allPeers} />
         </div>

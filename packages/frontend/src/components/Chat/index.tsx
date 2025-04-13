@@ -48,24 +48,26 @@ export function Chat({ isOpen }: { isOpen: boolean }) {
     >
       <div className={`absolute inset-0`}>
         <div
-          className="ml-2 cursor-pointer"
-          onClick={() =>
-            dispatch(roomActions.toggleChat({ shouldOpenChat: false }))
-          }
-        >
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-            onClick={() =>
-              dispatch(roomActions.toggleChat({ shouldOpenChat: false }))
-            }
-            aria-label="Close chat"
-          >
-            <LuArrowLeft className="h-6 w-6 text-primary" />
-          </button>
-        </div>
-        <div
           className={`flex flex-col h-full mx-4 py-4 transition-opacity duration-50 ${isOpen ? "opacity-100 delay-200" : "opacity-0"}`}
         >
+          {isMobileDevice() && (
+            <div
+              className="cursor-pointer"
+              onClick={() =>
+                dispatch(roomActions.toggleChat({ shouldOpenChat: false }))
+              }
+            >
+              <button
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                onClick={() =>
+                  dispatch(roomActions.toggleChat({ shouldOpenChat: false }))
+                }
+                aria-label="Close chat"
+              >
+                <LuArrowLeft className="h-6 w-6 text-primary" />
+              </button>
+            </div>
+          )}
           <div className="space-y-2 overflow-y-auto flex-1">
             {messages.map(({ message, isMe, sender, timestamp }) => (
               <ChatMessage

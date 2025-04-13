@@ -33,7 +33,20 @@ export default function RoomPage() {
 
   return (
     <RoomProvider roomId={roomId}>
-      <div className="h-screen max-h-dvh flex flex-col justify-start bg-green">
+      <div className="h-screen max-h-dvh flex flex-col justify-start">
+        <Toaster
+          position="top-right"
+          gutter={8}
+          reverseOrder={true}
+          toastOptions={{ duration: 2000 }}
+        >
+          {(t) => (
+            <div className="bg-info text-base flex  gap-x-2 px-2 py-2 rounded-lg max-w-[200px] overflow-hidden">
+              <span>💬</span>
+              <span className="line-clamp-3">{resolveValue(t.message, t)}</span>
+            </div>
+          )}
+        </Toaster>
         {isLoading && <div>Loading...</div>}
         {hasError && (
           <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-4 py-12 text-center">
