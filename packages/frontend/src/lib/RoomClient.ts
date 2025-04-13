@@ -34,7 +34,7 @@ export class RoomClient {
   private displayName: string | null = null;
 
   public state: RoomClientState = RoomClientState.NEW;
-  public localMedia = new LocalMedia();
+  private localMedia: LocalMedia;
 
   constructor({ store }: { store: Store }) {
     this.store = store;
@@ -44,6 +44,7 @@ export class RoomClient {
     }
     this.wsClient = new WsClient(import.meta.env.VITE_API_URL);
     this.mediasoupClient = new MediasoupClient(this.wsClient);
+    this.localMedia = new LocalMedia(store);
   }
 
   private initEventListeners() {
@@ -399,18 +400,5 @@ export class RoomClient {
         sender: this.displayName!,
       })
     );
-  }
-
-  public getCurrentVideoStream() {
-    if (this.localMedia.isVideoStreamActive()) {
-      return this.localMedia.getVideoStream();
-    }
-    return null;
-  }
-
-  public getCurrentAudioStream() {
-    if (this.localMedia.isAudioStreamActive()) {
-      return this.localMedia.getAudioStream();
-    }
   }
 }

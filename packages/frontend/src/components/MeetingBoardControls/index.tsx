@@ -9,7 +9,7 @@ import {
 } from "react-icons/io5";
 import { TbDeviceDesktopShare } from "react-icons/tb";
 
-export const VideoBoardControls = ({
+export const MeetingBoardControls = ({
   onToggleAudioClick,
   onToggleVideoClick,
   onEndCallClick,

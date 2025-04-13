@@ -145,4 +145,4 @@ export const roomSlice = createSlice({
 export const roomActions = roomSlice.actions;
 
 // Action creators are generated for each case reducer function
-export const roomsReducer = roomSlice.reducer;
+export const roomReducer = roomSlice.reducer;

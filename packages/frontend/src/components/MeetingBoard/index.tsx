@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useRoomClient } from "@/contexts/RoomContext";
 
@@ -9,15 +9,15 @@ import { Button } from "../../ui-library/Button";
 import { roomActions } from "@/store/slices/room";
 
 import { Modal } from "@/ui-library/Modal";
+import { isMobileDevice } from "@/utils/device";
 import { IoMdPerson } from "react-icons/io";
+import { useNavigate } from "react-router";
 import { Chat } from "../Chat";
 import { InviteGuest } from "../InviteGuest";
 import { PeerGrid } from "../PeerGrid";
-import { VideoBoardControls } from "../VideoBoardControls";
-import { useNavigate } from "react-router";
-import { isMobileDevice } from "@/utils/device";
+import { MeetingBoardControls } from "../MeetingBoardControls";
 
-export function VideoBoard() {
+export function MeetingBoard() {
   const navigate = useNavigate();
   const [areControlsVisibles, setAreControlsVisibles] = useState(true);
 
@@ -33,22 +33,9 @@ export function VideoBoard() {
   const isScreenSharingEnabled = useSelector(
     (state) => state.room.isScreenSharingEnabled
   );
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
 
-  useEffect(() => {
-    async function setupStream() {
-      const videoStream = await roomClient.getCurrentVideoStream();
-      if (videoStream) {
-        setVideoStream(videoStream);
-      }
-      const audioStream = await roomClient.getCurrentAudioStream();
-      if (audioStream) {
-        setAudioStream(audioStream);
-      }
-    }
-    setupStream();
-  }, []);
+  const videoStream = useSelector((state) => state.media.videoStream);
+  const audioStream = useSelector((state) => state.media.audioStream);
 
   const dispatch = useDispatch();
 
@@ -90,44 +77,36 @@ export function VideoBoard() {
   async function onToggleVideoClick() {
     if (!isCameraEnabled) {
       try {
-        const stream = await roomClient.enableWebcam();
-        setVideoStream(stream);
+        await roomClient.enableWebcam();
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableWebcam();
-      setVideoStream(null);
     }
   }
 
   async function onToggleAudioClick() {
     if (!isMicrophoneEnabled) {
       try {
-        const stream = await roomClient.enableMicrophone();
-        setAudioStream(stream);
+        await roomClient.enableMicrophone();
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableMicrophone();
-      setAudioStream(null);
     }
   }
 
   async function onToggleShareDesktopClick() {
     if (!isScreenSharingEnabled) {
       try {
-        const stream = await roomClient.enableScreenSharing();
-        if (stream) {
-          setVideoStream(stream);
-        }
+        await roomClient.enableScreenSharing();
       } catch (err) {
         console.error("Failed to get the stream", err);
       }
     } else {
       await roomClient.disableScreenSharing();
-      setVideoStream(null);
     }
   }
 
@@ -197,7 +176,7 @@ export function VideoBoard() {
         }
         className="flex justify-center gap-x-2 p-4 w-full"
       >
-        <VideoBoardControls
+        <MeetingBoardControls
           onEndCallClick={onEndCallClick}
           onToggleAudioClick={onToggleAudioClick}
           onToggleVideoClick={onToggleVideoClick}

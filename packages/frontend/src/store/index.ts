@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { roomsReducer } from "./slices/room";
+import { roomReducer } from "./slices/room";
+import { mediaReducer } from "./slices/media";
 import {
   useDispatch as useReduxDispatch,
   useSelector as useReduxSelector,
@@ -7,13 +8,24 @@ import {
 
 export const store = configureStore({
   reducer: {
-    room: roomsReducer,
+    room: roomReducer,
+    media: mediaReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["room/addConsumer", "room/addDataConsumer"],
-        ignoredPaths: ["room.consumers", "room.dataConsumers"], // Ensures all `track` objects in any consumer are ignored
+        ignoredActions: [
+          "room/addConsumer",
+          "room/addDataConsumer",
+          "media/setAudioStream",
+          "media/setVideoStream",
+        ],
+        ignoredPaths: [
+          "room.consumers",
+          "room.dataConsumers",
+          "media.videoStream",
+          "media.audioStream",
+        ],
       },
     }),
 });

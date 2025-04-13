@@ -1,5 +1,5 @@
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useEffect, useRef } from "react";
+import { useIsSpeaking } from "@/hooks/useIsSpeaking";
+import { useEffect, useMemo, useRef } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 
 type StreamPlayerProps = {
@@ -7,39 +7,48 @@ type StreamPlayerProps = {
   videoTrack: MediaStreamTrack | null;
   isAudioEnabled: boolean;
   displayName: string;
+  isMe: boolean;
 };
 
-export function StreamPlayer({
+export function AudioVideoPlayer({
   audioTrack,
   videoTrack,
   displayName,
   isAudioEnabled = false,
+  isMe,
 }: StreamPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const isSmallScreen = useMediaQuery("(max-width: 768px)");
+
+  const audioStream = useMemo(() => {
+    if (audioTrack) {
+      return new MediaStream([audioTrack]);
+    }
+    return null;
+  }, [audioTrack]);
+
+  const isSpeaking = useIsSpeaking(audioStream);
 
   useEffect(() => {
     if (videoRef.current && videoTrack) {
-      console.log("setting video track", { videoTrack });
-      console.log(videoTrack?.readyState); // should be "live"
-      console.log(videoTrack?.enabled);
       videoRef.current.srcObject = new MediaStream([videoTrack]);
     }
   }, [videoTrack]);
 
   useEffect(() => {
-    if (audioRef.current && audioTrack) {
-      audioRef.current.srcObject = new MediaStream([audioTrack]);
+    if (audioRef.current && audioStream) {
+      audioRef.current.srcObject = audioStream;
     }
-  }, [audioTrack]);
+  }, [audioStream]);
 
   return (
-    <div className="relative group h-full w-full  flex justify-center items-center ">
-      {audioTrack && <audio ref={audioRef} autoPlay />}
+    <div
+      className={`relative group h-full w-full  bg-surface flex justify-center items-center ${isSpeaking && "border-2 border-primary"} rounded-lg`}
+    >
+      {audioTrack && <audio ref={audioRef} autoPlay={!isMe} />}
       {videoTrack ? (
         <video
-          className={`h-full w-full rounded-lg ${isSmallScreen ? "object-cover" : "object-fit"}`}
+          className={`h-full w-full object-fit`}
           ref={videoRef}
           autoPlay
           muted
@@ -47,7 +56,7 @@ export function StreamPlayer({
         />
       ) : (
         <div
-          className={`h-full w-full rounded-lg  justify-center items-center flex flex-col gap-y-2 p-2 bg-surface`}
+          className={`h-full w-full rounded-lg justify-center items-center flex flex-col gap-y-2 p-2 bg-surface`}
         >
           {isAudioEnabled ? (
             <div>
@@ -61,6 +70,11 @@ export function StreamPlayer({
           <span className={`text-gray-400  text-bold line-clamp-1 text-md`}>
             {displayName}
           </span>
+        </div>
+      )}
+      {isSpeaking && (
+        <div className="absolute bottom-2 left-2 bg-primary rounded-full p-1">
+          <BiMicrophone size={25} />
         </div>
       )}
     </div>

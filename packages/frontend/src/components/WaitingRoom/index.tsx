@@ -7,7 +7,7 @@ import { useSelector } from "@/store";
 import { useState } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { IoVideocamOffOutline, IoVideocamOutline } from "react-icons/io5";
-import { StreamPlayer } from "../StreamPlayer";
+import { Me } from "../Me";
 
 export function WaitingRoom({
   onJoinRoom,
@@ -18,7 +18,6 @@ export function WaitingRoom({
     isCameraOn: boolean;
   }) => void;
 }) {
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [userName, setUserName] = useState<string>("");
   const roomClient = useRoomClient();
   const isMicrophoneEnabled = useSelector(
@@ -29,11 +28,9 @@ export function WaitingRoom({
 
   const toggleCamera = async () => {
     if (!isCameraEnabled) {
-      const stream = await roomClient.enableWebcam({ produce: false });
-      setVideoStream(stream);
+      roomClient.enableWebcam({ produce: false });
     } else {
       await roomClient.disableWebcam();
-      setVideoStream(null);
     }
   };
 
@@ -60,12 +57,7 @@ export function WaitingRoom({
     <div className="flex flex-col items-center  w-full p-8">
       <h2 className="text-3xl font-semibold mb-8">Waiting Room</h2>
       <div className="relative w-full max-w-2xl h-96 bg-black rounded-lg overflow-hidden mb-4">
-        <StreamPlayer
-          audioTrack={null} // Replace with actual audio track
-          videoTrack={videoStream?.getTracks()?.[0] ?? null} // Replace with actual video track
-          displayName={"You"}
-          isAudioEnabled={isMicrophoneEnabled}
-        />
+        <Me />
       </div>
 
       <div className="flex gap-4 mb-12 w-full max-w-2xl justify-center">

@@ -1,4 +1,4 @@
-import { VideoBoard } from "@/components/VideoBoard";
+import { MeetingBoard } from "@/components/MeetingBoard";
 import { WaitingRoom } from "@/components/WaitingRoom";
 import { RoomProvider, useRoomClient } from "@/contexts/RoomContext";
 import { getRoomById } from "@/services/rooms";
@@ -59,7 +59,7 @@ export default function RoomPage() {
           />
         )}
 
-        {!isLoading && !error && hasJoined && <VideoBoard />}
+        {!isLoading && !error && hasJoined && <MeetingBoard />}
       </div>
     </RoomProvider>
   );

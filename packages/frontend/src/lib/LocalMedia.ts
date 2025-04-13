@@ -1,7 +1,11 @@
+import { Store } from "@/store";
+import { mediaActions } from "@/store/slices/media";
+
 export class LocalMedia {
   private audioStream: MediaStream | null = null;
   private videoStream: MediaStream | null = null;
   private screenStream: MediaStream | null = null;
+  constructor(private store: Store) {}
 
   public async getAudioStream(): Promise<MediaStream> {
     if (!this.audioStream) {
@@ -9,6 +13,7 @@ export class LocalMedia {
         audio: true,
         video: false,
       });
+      this.store.dispatch(mediaActions.setAudioStream(this.audioStream));
     }
 
     return this.audioStream;
@@ -18,6 +23,7 @@ export class LocalMedia {
     if (this.audioStream) {
       this.audioStream.getTracks().forEach((track) => track.stop());
       this.audioStream = null;
+      this.store.dispatch(mediaActions.removeAudioStream());
     }
   }
 
@@ -29,6 +35,7 @@ export class LocalMedia {
           facingMode: "user",
         },
       });
+      this.store.dispatch(mediaActions.setVideoStream(this.videoStream));
     }
     return this.videoStream;
   }
@@ -37,6 +44,7 @@ export class LocalMedia {
     if (this.videoStream) {
       this.videoStream.getTracks().forEach((track) => track.stop());
       this.videoStream = null;
+      this.store.dispatch(mediaActions.removeVideoStream());
     }
   }
   public async getScreenStream(): Promise<MediaStream> {
@@ -45,6 +53,7 @@ export class LocalMedia {
         audio: false,
         video: true,
       });
+      this.store.dispatch(mediaActions.setVideoStream(this.screenStream));
     }
 
     return this.screenStream;
@@ -54,13 +63,7 @@ export class LocalMedia {
     if (this.screenStream) {
       this.screenStream.getTracks().forEach((track) => track.stop());
       this.screenStream = null;
+      this.store.dispatch(mediaActions.removeVideoStream());
     }
-  }
-
-  public isVideoStreamActive() {
-    return this.videoStream !== null;
-  }
-  public isAudioStreamActive() {
-    return this.audioStream !== null;
   }
 }
