@@ -43,8 +43,11 @@ export function AudioVideoPlayer({
 
   return (
     <div
-      className={`relative group h-full w-full  bg-surface flex justify-center items-center ${isSpeaking && "border-2 border-primary"} rounded-lg`}
+      className={`relative group h-full w-full  bg-surface flex justify-center items-center  rounded-lg`}
     >
+      {isSpeaking && (
+        <div className="absolute inset-0 border-2 border-primary rounded-lg" />
+      )}
       {audioTrack && <audio ref={audioRef} autoPlay={!isMe} />}
       {videoTrack ? (
         <video
