@@ -41,7 +41,7 @@ export default function RoomPage() {
           toastOptions={{ duration: 2000 }}
         >
           {(t) => (
-            <div className="bg-info text-base flex  gap-x-2 px-2 py-2 rounded-lg max-w-[200px] overflow-hidden">
+            <div className="bg-info text-base flex  mt-14 gap-x-2 px-2 py-2 rounded-lg max-w-[200px] overflow-hidden">
               <span>💬</span>
               <span className="line-clamp-3">{resolveValue(t.message, t)}</span>
             </div>
