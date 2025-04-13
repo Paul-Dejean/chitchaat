@@ -66,7 +66,7 @@ export function Peer({
       {audioTrack && <audio ref={audioRef} autoPlay={!isMe} />}
       {videoTrack ? (
         <video
-          className={`h-full w-full ${isSmallScreen ? "object-cover" : "object-fit"} `}
+          className={`h-full w-full object-fit `}
           ref={videoRef}
           autoPlay
           muted

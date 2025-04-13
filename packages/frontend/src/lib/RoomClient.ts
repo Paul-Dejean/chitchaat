@@ -289,9 +289,6 @@ export class RoomClient {
   }
 
   async enableWebcam({ produce = true }: { produce?: boolean } = {}) {
-    if (this.desktopProducer) {
-      await this.disableScreenSharing();
-    }
     if (this.videoProducer) {
       return this.localMedia.getVideoStream();
     }
@@ -299,6 +296,9 @@ export class RoomClient {
     const track = stream.getVideoTracks()[0];
     if (produce) {
       this.videoProducer = await this.mediasoupClient.createProducer(track);
+    }
+    if (this.desktopProducer) {
+      await this.disableScreenSharing();
     }
     this.store.dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
     return stream;
@@ -315,9 +315,6 @@ export class RoomClient {
   }
 
   async enableScreenSharing() {
-    if (this.videoProducer) {
-      await this.disableWebcam();
-    }
     if (this.desktopProducer) {
       return this.localMedia.getScreenStream();
     }
@@ -325,6 +322,9 @@ export class RoomClient {
     const track = stream.getVideoTracks()[0];
     this.desktopProducer = await this.mediasoupClient.createProducer(track);
     this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
+    if (this.videoProducer) {
+      await this.disableWebcam();
+    }
     this.store.dispatch(
       roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
     );
