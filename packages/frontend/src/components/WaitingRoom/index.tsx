@@ -4,7 +4,7 @@ import { TextInput } from "@/ui-library/TextInput";
 
 import { useRoomClient } from "@/contexts/RoomContext";
 import { useSelector } from "@/store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import { IoVideocamOffOutline, IoVideocamOutline } from "react-icons/io5";
 import { Me } from "../Me";
@@ -19,12 +19,28 @@ export function WaitingRoom({
   }) => void;
 }) {
   const [userName, setUserName] = useState<string>("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const roomClient = useRoomClient();
   const isMicrophoneEnabled = useSelector(
     (state) => state.room.isMicrophoneEnabled
   );
 
   const isCameraEnabled = useSelector((state) => state.room.isCameraEnabled);
+
+  const validateUserName = (name: string): boolean => {
+    const nameRegex = /^[a-zA-Z0-9._ ]+$/;
+    return nameRegex.test(name);
+  };
+
+  useEffect(() => {
+    if (userName && !validateUserName(userName)) {
+      setNameError(
+        "Username can only contain letters, numbers, dots, underscores, and spaces."
+      );
+    } else {
+      setNameError(null);
+    }
+  }, [userName]);
 
   const toggleCamera = async () => {
     if (!isCameraEnabled) {
@@ -43,15 +59,13 @@ export function WaitingRoom({
   };
 
   const handleJoinRoom = () => {
-    if (!userName) return;
+    if (!userName || nameError) return;
     onJoinRoom({
       userName,
       isMicOn: isMicrophoneEnabled,
       isCameraOn: isCameraEnabled,
     });
   };
-
-  console.log("waiting");
 
   return (
     <div className="flex flex-col items-center  w-full p-8">
@@ -98,11 +112,21 @@ export function WaitingRoom({
           placeholder="Enter your name"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
-          className="w-full py-3 px-4 text-base rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
+          className={`w-full py-3 px-4 text-base rounded-lg border ${
+            nameError ? "border-red-500" : "border-gray-300"
+          } focus:outline-none focus:border-blue-500`}
+          error={nameError}
         />
+        {nameError && (
+          <div className="mt-1 text-sm text-red-500">{nameError}</div>
+        )}
       </div>
 
-      <Button variant="primary" onClick={handleJoinRoom} disabled={!userName}>
+      <Button
+        variant="primary"
+        onClick={handleJoinRoom}
+        disabled={!userName || Boolean(nameError)}
+      >
         Join Room
       </Button>
     </div>
