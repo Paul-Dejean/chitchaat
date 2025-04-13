@@ -153,7 +153,7 @@ export function MeetingBoard() {
         </Button>
       </div>
       <div className="flex flex-1">
-        <div className="w-full h-full md:p-8 p-4">
+        <div className="w-full h-full">
           <PeerGrid peers={allPeers} />
         </div>
         <div className="py-2">

@@ -34,6 +34,7 @@ type Peer = {
   isMe: boolean;
 };
 export function PeerGrid({ peers }: { peers: Peer[] }) {
+  console.log({ peers });
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
   const others = peers.filter((peer) => !peer.isMe);

@@ -30,7 +30,7 @@ export function InviteGuest({ url }: { url: string }) {
         </h2>
         <canvas ref={canvasRef} className="mx-auto"></canvas>
         <h2 className="font-bold">Or by sharing this url</h2>
-        <div className="flex items-center gap-2 p-2 border rounded-lg bg-surface w-fit">
+        <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-surface w-fit">
           <span className="text-sm font-mono max-w-xs mr-2 text-base">
             {url}
           </span>
@@ -38,7 +38,7 @@ export function InviteGuest({ url }: { url: string }) {
             {copied ? (
               <LuCheck className="text-green-500" />
             ) : (
-              <LuClipboardCopy />
+              <LuClipboardCopy className="text-primary" />
             )}
           </button>
         </div>
