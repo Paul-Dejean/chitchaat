@@ -218,7 +218,7 @@ export class RoomClient {
 
     await this.mediasoupClient.initDevice(roomId);
     await this.mediasoupClient.initTransports();
-
+    await this.enableChatDataProducer();
     this.state = RoomClientState.CONNECTED;
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTED));
 

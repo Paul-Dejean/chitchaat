@@ -132,7 +132,6 @@ export function VideoBoard() {
   }
 
   async function onToggleChatClick() {
-    await roomClient.enableChatDataProducer();
     if (!isChatOpen) {
       dispatch(roomActions.toggleChat({ shouldOpenChat: true }));
     } else {
