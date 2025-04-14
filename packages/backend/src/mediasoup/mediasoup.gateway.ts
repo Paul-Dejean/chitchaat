@@ -96,6 +96,8 @@ export class MediasoupGateway
       .except(client.id)
       .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
 
+    console.log({ peers: room.peers });
+
     return {
       room: {
         ...room,

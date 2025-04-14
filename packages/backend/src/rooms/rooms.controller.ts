@@ -13,7 +13,9 @@ export class RoomsController {
 
   @Get(':roomId')
   async getRoomById(@Param('roomId') roomId: string) {
-    return this.roomsService.getRoomById(roomId);
+    const room = await this.roomsService.getRoomById(roomId);
+    console.log({ peers: room?.peers });
+    return room;
   }
   @Post()
   async createRoom() {
