@@ -33,9 +33,45 @@ type Peer = {
   isMicrophoneEnabled: boolean;
   isMe: boolean;
 };
-export function PeerGrid({ peers }: { peers: Peer[] }) {
+export function PeerGrid({
+  peers,
+  presenter,
+}: {
+  peers: Peer[];
+  presenter?: string | null;
+}) {
   console.log({ peers });
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
+
+  if (presenter) {
+    const presenterPeer = peers.find((peer) => peer.id === presenter);
+    if (!presenterPeer) {
+      return null;
+    }
+
+    if (presenterPeer.isMe) {
+      return (
+        <div className="relative h-full w-full overflow-auto">
+          <div className="absolute inset-0 px-2">
+            <Me />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="relative h-full w-full overflow-auto">
+        <div className="absolute inset-0 px-2">
+          <AudioVideoPlayer
+            audioTrack={presenterPeer.audioTrack}
+            videoTrack={presenterPeer.videoTrack}
+            displayName={presenterPeer?.displayName}
+            isAudioEnabled={presenterPeer?.isMicrophoneEnabled}
+            isMe={false}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const others = peers.filter((peer) => !peer.isMe);
 

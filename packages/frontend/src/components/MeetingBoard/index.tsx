@@ -156,7 +156,7 @@ export function MeetingBoard() {
       </div>
       <div className="flex flex-1 ">
         <div className="w-full h-full">
-          <PeerGrid peers={allPeers} />
+          <PeerGrid peers={allPeers} presenter={presenter} />
         </div>
         <div className="md:py-2">
           <Chat isOpen={isChatOpen} />
