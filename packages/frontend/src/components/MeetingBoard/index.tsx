@@ -166,7 +166,6 @@ export function MeetingBoard() {
           isMobileDevice()
             ? {
                 position: "absolute",
-
                 bottom: 0,
                 transform: `translateY(${areControlsVisibles ? "0px" : "100%"})`,
                 transition: "transform 0.3s ease, opacity 0.3s ease",
