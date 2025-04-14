@@ -115,7 +115,6 @@ export function WaitingRoom({
           className={`w-full py-3 px-4 text-base rounded-lg border ${
             nameError ? "border-red-500" : "border-gray-300"
           } focus:outline-none focus:border-blue-500`}
-          error={nameError}
         />
         {nameError && (
           <div className="mt-1 text-sm text-red-500">{nameError}</div>
