@@ -29,8 +29,11 @@ import {
   JoinRoomDto,
   joinRoomSchema,
   pauseProducerSchema,
+  removePresenterSchema,
   resumeConsumerSchema,
   resumeProducerSchema,
+  SetPresenterDto,
+  setPresenterSchema,
 } from './mediasoup.schemas';
 import { ClientsService } from '@/clients/clients.service';
 import { WsExceptionFilter } from '@/common/filters/ws-exception-filter/ws-exception-filter';
@@ -286,5 +289,34 @@ export class MediasoupGateway
       routerRtpCapabilities:
         await this.roomService.getRouterRtpCapabilities(roomId),
     };
+  }
+
+  @SubscribeMessage('setPresenter')
+  async setPresenter(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(new ZodValidationPipe(setPresenterSchema))
+    { roomId }: SetPresenterDto,
+  ) {
+    const existingPresenter = this.roomService.getPresenter(roomId);
+    if (existingPresenter) {
+      this.server.to(roomId).emit('presenterRemoved');
+    }
+
+    await this.roomService.setPresenter(roomId, client.id);
+
+    this.server.to(roomId).emit('newPresenter', { peerId: client.id });
+
+    return true;
+  }
+
+  @SubscribeMessage('removePresenter')
+  async removePresenter(
+    @MessageBody(new ZodValidationPipe(removePresenterSchema))
+    { roomId }: SetPresenterDto,
+  ) {
+    await this.roomService.removePresenter(roomId);
+    console.log('presenter removed');
+    this.server.to(roomId).emit('presenterRemoved');
+    return true;
   }
 }

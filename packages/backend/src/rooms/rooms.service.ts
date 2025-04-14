@@ -4,6 +4,7 @@ import { types as MediasoupTypes } from 'mediasoup';
 type Room = {
   id: string;
   peers: Peer[];
+  presenter: string | null;
   isClosed: boolean;
   router: MediasoupTypes.Router;
 };
@@ -38,6 +39,7 @@ export class RoomsService {
       id: roomId,
       router,
       peers: [],
+      presenter: null,
       isClosed: false,
       producers: new Map(),
       consumers: new Map(),
@@ -87,6 +89,29 @@ export class RoomsService {
     // }
   }
 
+  getPresenter(roomId: string) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    return room.presenter;
+  }
+
+  setPresenter(roomId: string, peerId: string) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    room.presenter = peerId;
+  }
+
+  removePresenter(roomId: string) {
+    const room = this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    room.presenter = null;
+  }
   getTransportById(roomId: string, transportId: string) {
     const room = this.getRoomById(roomId);
     if (!room) {

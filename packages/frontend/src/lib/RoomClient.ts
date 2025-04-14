@@ -33,7 +33,6 @@ export class RoomClient {
   private dataConsumers: DataConsumer[] = [];
   private displayName: string | null = null;
 
-  public state: RoomClientState = RoomClientState.NEW;
   private localMedia: LocalMedia;
 
   constructor({ store }: { store: Store }) {
@@ -98,6 +97,19 @@ export class RoomClient {
         this.store.dispatch(roomActions.removePeer({ peerId }));
       }
     );
+
+    this.wsClient.registerHandler(
+      "newPresenter",
+      async ({ peerId }: { peerId: string }) => {
+        console.log({ newPresenter: peerId });
+        this.store.dispatch(roomActions.setPresenter({ peerId }));
+      }
+    );
+
+    this.wsClient.registerHandler("presenterRemoved", async () => {
+      console.log("presenter removed");
+      this.store.dispatch(roomActions.removePresenter());
+    });
 
     this.wsClient.registerHandler(
       "newPeer",
@@ -195,7 +207,7 @@ export class RoomClient {
 
   async joinRoom(roomId: string, userName: string) {
     this.store.dispatch(roomActions.resetRoom());
-    this.state = RoomClientState.CONNECTING;
+
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTING));
 
     await this.wsClient.connect();
@@ -221,7 +233,7 @@ export class RoomClient {
     await this.mediasoupClient.initDevice(roomId);
     await this.mediasoupClient.initTransports();
     await this.enableChatDataProducer();
-    this.state = RoomClientState.CONNECTED;
+
     this.store.dispatch(roomActions.updateState(RoomClientState.CONNECTED));
 
     for (const peer of room.peers) {
@@ -287,6 +299,7 @@ export class RoomClient {
   leaveRoom() {
     this.mediasoupClient.closeTransports();
     this.wsClient.disconnect();
+    this.localMedia.stopAllStreams();
     this.store.dispatch(roomActions.resetRoom());
   }
 
@@ -327,6 +340,10 @@ export class RoomClient {
     if (this.videoProducer) {
       await this.disableWebcam();
     }
+
+    await this.wsClient.emitMessage("setPresenter", {
+      roomId: this.mediasoupClient.roomId,
+    });
     this.store.dispatch(
       roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
     );
@@ -334,12 +351,21 @@ export class RoomClient {
   }
 
   async disableScreenSharing() {
+    console.log("disabling screen sharing");
+
     if (this.desktopProducer) {
       this.localMedia.stopScreenStream();
+
       this.desktopProducer.close();
       this.mediasoupClient.closeProducer(this.desktopProducer.id);
+
+      await this.wsClient.emitMessage("removePresenter", {
+        roomId: this.mediasoupClient.roomId,
+      });
+
       this.desktopProducer = null;
     }
+
     this.store.dispatch(
       roomActions.toggleScreenSharing({ shouldEnableScreenSharing: false })
     );

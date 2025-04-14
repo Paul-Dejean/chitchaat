@@ -27,6 +27,8 @@ export function MeetingBoard() {
   const isChatOpen = useSelector((state) => state.room.isChatOpen);
   const [isModalOpen, setModalOpen] = useState(false);
   const isCameraEnabled = useSelector((state) => state.room.isCameraEnabled);
+  const presenter = useSelector((state) => state.room.presenter);
+  console.log({ presenter });
   const isMicrophoneEnabled = useSelector(
     (state) => state.room.isMicrophoneEnabled
   );

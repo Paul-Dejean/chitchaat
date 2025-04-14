@@ -63,6 +63,7 @@ export class WsClient {
         throw new Error("Socket not instanciated");
       }
       this.socket.emit(type, data, (response: T) => {
+        console.log({ response });
         if (
           typeof response === "object" &&
           response !== null &&
@@ -71,6 +72,7 @@ export class WsClient {
         ) {
           reject(response.error);
         } else {
+          console.log("resolving");
           resolve(response);
         }
       });

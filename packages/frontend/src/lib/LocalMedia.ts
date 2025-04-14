@@ -66,4 +66,10 @@ export class LocalMedia {
       this.store.dispatch(mediaActions.removeVideoStream());
     }
   }
+
+  public stopAllStreams() {
+    this.stopAudioStream();
+    this.stopVideoStream();
+    this.stopScreenStream();
+  }
 }

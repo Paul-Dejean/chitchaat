@@ -108,3 +108,13 @@ export const getRouterRtpCapabilitiesSchema = z.object({
 export type GetRouterRtpCapabilitiesDto = z.infer<
   typeof getRouterRtpCapabilitiesSchema
 >;
+
+export const setPresenterSchema = z.object({
+  roomId: z.string(),
+});
+export type SetPresenterDto = z.infer<typeof setPresenterSchema>;
+
+export const removePresenterSchema = z.object({
+  roomId: z.string(),
+});
+export type RemovePresenterDto = z.infer<typeof removePresenterSchema>;

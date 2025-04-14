@@ -23,6 +23,7 @@ const initialState = {
   peers: {} as Record<string, Peer>,
   consumers: [] as Consumer[],
   dataConsumers: [] as DataConsumer[],
+  presenter: null as string | null,
   messages: [] as {
     isMe: boolean;
     message: string;
@@ -138,6 +139,13 @@ export const roomSlice = createSlice({
       }>
     ) => {
       state.messages.push(action.payload);
+    },
+    setPresenter: (state, action: PayloadAction<{ peerId: string }>) => {
+      state.presenter = action.payload.peerId;
+    },
+
+    removePresenter: (state) => {
+      state.presenter = null;
     },
   },
 });
