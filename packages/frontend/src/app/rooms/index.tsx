@@ -9,8 +9,9 @@ import { useNavigate } from "react-router";
 import { FullScreenLoading } from "@/components/LoadingSpinner";
 
 import useSWR from "swr";
+import { WarningIcon } from "@/components/WarningIcon";
 
-export default function RoomPage() {
+export function RoomPage() {
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
   const navigate = useNavigate();
@@ -25,18 +26,7 @@ export default function RoomPage() {
       <div className="flex flex-col items-center justify-center fixed inset-0 px-4 py-12 text-center">
         <div className="bg-surface-2 shadow-xl rounded-2xl p-8 max-w-md">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full  flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-warning"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <WarningIcon className="h-10 w-10 text-warning" />
           </div>
           <h1 className="text-2xl font-bold text-base mb-2">Room ID Missing</h1>
           <p className="text-gray-600 mb-6">
@@ -76,18 +66,7 @@ export default function RoomPage() {
           <div className="flex flex-col items-center justify-center fixed inset-0  px-4 py-12 text-center">
             <div className="bg-surface-2 shadow-xl rounded-2xl p-8 max-w-md">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-danger-light flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 text-danger"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <WarningIcon className="h-10 w-10 text-danger" />
               </div>
               <h1 className="text-2xl font-bold text-base mb-2">
                 Room Not Found

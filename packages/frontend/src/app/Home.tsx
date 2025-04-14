@@ -1,7 +1,7 @@
 import { createRoom } from "@/services/rooms";
 import { useNavigate } from "react-router";
 
-const Home = () => {
+export function Home() {
   const navigate = useNavigate();
 
   const createMeeting = async () => {
@@ -64,6 +64,4 @@ const Home = () => {
       </footer>
     </div>
   );
-};
-
-export default Home;
+}

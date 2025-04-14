@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 
 import { BrowserRouter, Route, Routes } from "react-router";
-import Home from "./app/Home";
-import RoomPage from "./app/rooms/page";
+import { Home } from "./app/Home";
+import { RoomPage } from "./app/rooms";
 import { Provider } from "react-redux";
 import { store } from "./store";
 
