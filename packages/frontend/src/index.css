@@ -1,33 +1,33 @@
 @import "tailwindcss";
 @theme {
   /* Fonts */
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Poppins', sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-heading: "Poppins", sans-serif;
 
   /* Colors */
   --color-background: #121620; /* Darker background */
-  --color-surface: #1E2433; /* Dark surface that contrasts with background */
-  --color-surface-2: #2A3344; /* Slightly lighter surface for layering */
-  --color-surface-3: #353E50; /* Even lighter surface for elevated components */
+  --color-surface: #1e2433; /* Dark surface that contrasts with background */
+  --color-surface-2: #2a3344; /* Slightly lighter surface for layering */
+  --color-surface-3: #353e50; /* Even lighter surface for elevated components */
 
-  --color-primary: #5D5DFF; /* Vibrant purple primary */
-  --color-primary-hover: #4A4AE5; /* Darker purple for hover */
-  --color-primary-muted: #5D5DFF40; /* Transparent version for subtle UI elements */
-  --color-secondary: #8B5CF6; /* Soft secondary purple */
-  --color-secondary-hover: #7C4DF1; /* Darker secondary for hover */
+  --color-primary: #5d5dff; /* Vibrant purple primary */
+  --color-primary-hover: #4a4ae5; /* Darker purple for hover */
+  --color-primary-muted: #5d5dff40; /* Transparent version for subtle UI elements */
+  --color-secondary: #8b5cf6; /* Soft secondary purple */
+  --color-secondary-hover: #7c4df1; /* Darker secondary for hover */
 
   /* Status colors */
-  --color-success: #10B981; /* Green for success states */
-  --color-warning: #F59E0B; /* Amber for warnings */
-  --color-info: #3B82F6; /* Blue for information */
-  --color-danger: #EF4444; /* Clear red for danger */
+  --color-success: #10b981; /* Green for success states */
+  --color-warning: #f59e0b; /* Amber for warnings */
+  --color-info: #3b82f6; /* Blue for information */
+  --color-danger: #ef4444; /* Clear red for danger */
 
   /* UI colors */
-  --color-border: #2E3446; /* Subtle border color */
-  --color-border-hover: #3E455C; /* Slightly lighter border for hover states */
-  --color-muted: #94A3B8; /* Muted text that's still readable */
-  --color-inverted: #FFFFFF; /* White for inverted elements */
-  --color-base: #E2E8F0; /* Off-white text that's easy on eyes */
+  --color-border: #2e3446; /* Subtle border color */
+  --color-border-hover: #3e455c; /* Slightly lighter border for hover states */
+  --color-muted: #94a3b8; /* Muted text that's still readable */
+  --color-inverted: #ffffff; /* White for inverted elements */
+  --color-base: #e2e8f0; /* Off-white text that's easy on eyes */
   --color-backdrop: rgb(0 0 0 / 0.7);
 
   /* Shadows */
@@ -43,7 +43,8 @@
 }
 
 html {
-  color: var(--color-base)
+  color: var(--color-base);
+  font-family: var(--font-sans);
 }
 
 body {
