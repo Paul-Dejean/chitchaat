@@ -43,7 +43,7 @@ export function PeerGrid({ peers }: { peers: Peer[] }) {
 
   return (
     <div className="relative h-full w-full overflow-auto">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 px-2">
         <div className="flex justify-center flex-wrap h-full w-full overflow-auto items-center ">
           <div
             key="me"
