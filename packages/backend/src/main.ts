@@ -12,7 +12,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: '*', // Allow all origins
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow specific HTTP methods
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
   await app.listen(process.env.PORT ?? 3001, '0.0.0.0', () => {
     console.log(`Listening on port ${process.env.PORT ?? 3001}`);
