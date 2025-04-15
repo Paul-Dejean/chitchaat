@@ -113,8 +113,8 @@ export function WaitingRoom({
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
           className={`w-full py-3 px-4 text-base rounded-lg border ${
-            nameError && "border-red-500"
-          } focus:outline-none focus:border-blue-500`}
+            nameError && "border-red-500 focus:border-red-500"
+          }`}
         />
         {nameError && (
           <div className="mt-1 text-sm text-red-500">{nameError}</div>
