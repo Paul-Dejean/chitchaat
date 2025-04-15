@@ -42,7 +42,7 @@ export function Chat({ isOpen }: { isOpen: boolean }) {
         isOpen
           ? isMobileDevice()
             ? "w-screen z-10000"
-            : "w-[250px] mx-2"
+            : "w-[350px] mx-2"
           : "w-0 overflow-hidden delay-200 bg-background"
       }`}
     >
