@@ -18,8 +18,8 @@ export class RoomsController {
     @Param('roomId', new ZodValidationPipe(getRoomByIdSchema)) roomId: string,
   ) {
     const room = await this.roomsService.getRoomById(roomId);
-    console.log({ peers: room?.peers });
-    return room;
+    if (!room) return null;
+    return { id: room.id };
   }
   @Post()
   async createRoom() {

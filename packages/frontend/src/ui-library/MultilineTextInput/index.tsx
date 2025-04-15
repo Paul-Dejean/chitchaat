@@ -8,7 +8,7 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 export function MultiLineTextInput({ ...props }: TextareaProps) {
   return (
     <textarea
-      className="px-2 resize-none border-sky-700 border rounded-lg field-sizing-content w-full max-h-64"
+      className="px-2 resize-none border-sky-700 focus:outline-none focus:border-blue-500 border rounded-lg field-sizing-content w-full max-h-64"
       {...props}
     />
   );

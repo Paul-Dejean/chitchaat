@@ -218,6 +218,7 @@ export class RoomClient {
       displayName: userName,
     })) as {
       room: {
+        presenter: string | null;
         peers: {
           id: string;
           displayName: string;
@@ -293,6 +294,9 @@ export class RoomClient {
           );
         }
       }
+    }
+    if (room.presenter) {
+      this.store.dispatch(roomActions.setPresenter({ peerId: room.presenter }));
     }
   }
 
