@@ -213,10 +213,7 @@ export class RoomClient {
     await this.wsClient.connect();
     this.initEventListeners();
 
-    const { room } = (await this.wsClient.emitMessage("joinRoom", {
-      roomId,
-      displayName: userName,
-    })) as {
+    const { room } = await this.wsClient.emitMessage<{
       room: {
         presenter: string | null;
         peers: {
@@ -227,7 +224,10 @@ export class RoomClient {
         }[];
       };
       displayName: string;
-    };
+    }>("joinRoom", {
+      roomId,
+      displayName: userName,
+    });
 
     this.displayName = userName;
 

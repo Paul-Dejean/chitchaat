@@ -4,6 +4,9 @@ type EventListener<T extends unknown[]> =
   | ((...args: T) => void)
   | ((...args: T) => Promise<void>);
 
+type SocketResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 export class WsClient {
   private socketUrl: string;
   private socket: Socket | undefined;
@@ -62,18 +65,12 @@ export class WsClient {
       if (!this.socket) {
         throw new Error("Socket not instanciated");
       }
-      this.socket.emit(type, data, (response: T) => {
-        console.log({ response });
-        if (
-          typeof response === "object" &&
-          response !== null &&
-          "error" in response &&
-          response.error
-        ) {
+
+      this.socket.emit(type, data, (response: SocketResponse<T>) => {
+        if (!response.success) {
           reject(response.error);
         } else {
-          console.log("resolving");
-          resolve(response);
+          resolve(response.data);
         }
       });
     });

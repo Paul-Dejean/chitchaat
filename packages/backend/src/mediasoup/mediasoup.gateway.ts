@@ -1,4 +1,11 @@
-import { Logger, UseFilters } from '@nestjs/common';
+import { ClientsService } from '@/clients/clients.service';
+import { ConsumersService } from '@/consumers/consumers.service';
+import { DataProducersService } from '@/data-producers/data-producers.service';
+import { ProducersService } from '@/producers/producers.service';
+import { RoomsService } from '@/rooms/rooms.service';
+import { TransportsService } from '@/transports/transports.service';
+import { ZodValidationPipe } from '@/zod-validation/zod-validation.pipe';
+import { Logger } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -10,11 +17,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ConsumersService } from '@/consumers/consumers.service';
-import { ProducersService } from '@/producers/producers.service';
-import { RoomsService } from '@/rooms/rooms.service';
-import { TransportsService } from '@/transports/transports.service';
-import { ZodValidationPipe } from '@/zod-validation/zod-validation.pipe';
 import {
   closeProducerSchema,
   ConnectTransportDto,
@@ -35,11 +37,8 @@ import {
   SetPresenterDto,
   setPresenterSchema,
 } from './mediasoup.schemas';
-import { ClientsService } from '@/clients/clients.service';
-import { WsExceptionFilter } from '@/common/filters/ws-exception-filter/ws-exception-filter';
-import { DataProducersService } from '@/data-producers/data-producers.service';
+
 @WebSocketGateway({ cors: '*' })
-@UseFilters(WsExceptionFilter)
 export class MediasoupGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
@@ -88,33 +87,43 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(joinRoomSchema))
     { roomId, displayName }: JoinRoomDto,
   ) {
-    await client.join(roomId);
-    const { room, newPeer } = this.roomService.joinRoom(roomId, {
-      id: client.id,
-      displayName,
-    });
+    try {
+      await client.join(roomId);
+      const { room, newPeer } = this.roomService.joinRoom(roomId, {
+        id: client.id,
+        displayName,
+      });
 
-    this.server
-      .to(roomId)
-      .except(client.id)
-      .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
+      this.server
+        .to(roomId)
+        .except(client.id)
+        .emit('newPeer', { id: newPeer.id, displayName: newPeer.displayName });
 
-    console.log({ peers: room.peers });
-
-    return {
-      room: {
-        ...room,
-        peers: room.peers.map((peer) => ({
-          id: peer.id,
-          displayName: peer.displayName,
-          producers: peer.producers.map((producer) => ({ id: producer.id })),
-          dataProducers: peer.dataProducers.map((dataProducer) => ({
-            id: dataProducer.id,
-          })),
-        })),
-      },
-      displayName: newPeer.displayName,
-    };
+      return {
+        success: true,
+        data: {
+          room: {
+            ...room,
+            peers: room.peers.map((peer) => ({
+              id: peer.id,
+              displayName: peer.displayName,
+              producers: peer.producers.map((producer) => ({
+                id: producer.id,
+              })),
+              dataProducers: peer.dataProducers.map((dataProducer) => ({
+                id: dataProducer.id,
+              })),
+            })),
+          },
+          displayName: newPeer.displayName,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('createTransport')
@@ -123,22 +132,29 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(createTransportSchema))
     { roomId, sctpCapabilities }: CreateTransportDto,
   ) {
-    console.log({ roomId, sctpCapabilities });
-    const transport = await this.transportsService.createWebRtcTransport(
-      roomId,
-      client.id,
-      sctpCapabilities,
-    );
+    try {
+      const transport = await this.transportsService.createWebRtcTransport(
+        roomId,
+        client.id,
+        sctpCapabilities,
+      );
 
-    console.log({ transport });
-
-    return {
-      id: transport.id,
-      iceParameters: transport.iceParameters,
-      iceCandidates: transport.iceCandidates,
-      dtlsParameters: transport.dtlsParameters,
-      sctpParameters: transport.sctpParameters,
-    };
+      return {
+        success: true,
+        data: {
+          id: transport.id,
+          iceParameters: transport.iceParameters,
+          iceCandidates: transport.iceCandidates,
+          dtlsParameters: transport.dtlsParameters,
+          sctpParameters: transport.sctpParameters,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('connectTransport')
@@ -146,12 +162,22 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(connectTransportSchema))
     { roomId, transportId, dtlsParameters }: ConnectTransportDto,
   ) {
-    await this.transportsService.connectTransport(
-      roomId,
-      transportId,
-      dtlsParameters,
-    );
-    return { isConnected: true };
+    try {
+      await this.transportsService.connectTransport(
+        roomId,
+        transportId,
+        dtlsParameters,
+      );
+      return {
+        success: true,
+        data: { isConnected: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('createProducer')
@@ -160,18 +186,28 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(createProducerSchema))
     { roomId, transportId, kind, rtpParameters }: CreateProducerDto,
   ) {
-    const producer = await this.producersService.createProducer({
-      peerId: client.id,
-      roomId,
-      transportId,
-      kind,
-      rtpParameters,
-    });
-    this.server
-      .to(roomId)
-      .except(client.id)
-      .emit('newProducer', { producerId: producer.id, peerId: client.id });
-    return { producerId: producer.id };
+    try {
+      const producer = await this.producersService.createProducer({
+        peerId: client.id,
+        roomId,
+        transportId,
+        kind,
+        rtpParameters,
+      });
+      this.server
+        .to(roomId)
+        .except(client.id)
+        .emit('newProducer', { producerId: producer.id, peerId: client.id });
+      return {
+        success: true,
+        data: { producerId: producer.id },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('createConsumer')
@@ -180,19 +216,29 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(createConsumerSchema))
     { roomId, producerId, rtpCapabilities, consumerId }: CreateConsumerDto,
   ) {
-    const consumer = await this.consumersService.createConsumer({
-      peerId: client.id,
-      roomId,
-      consumerId,
-      producerId,
-      rtpCapabilities,
-    });
+    try {
+      const consumer = await this.consumersService.createConsumer({
+        peerId: client.id,
+        roomId,
+        consumerId,
+        producerId,
+        rtpCapabilities,
+      });
 
-    return {
-      kind: consumer.kind,
-      rtpParameters: consumer.rtpParameters,
-      id: consumer.id,
-    };
+      return {
+        success: true,
+        data: {
+          kind: consumer.kind,
+          rtpParameters: consumer.rtpParameters,
+          id: consumer.id,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('createDataProducer')
@@ -201,19 +247,30 @@ export class MediasoupGateway
     @MessageBody()
     { roomId, transportId, sctpStreamParameters }: any,
   ) {
-    const dataProducer = await this.dataProducersService.createDataProducer({
-      peerId: client.id,
-      roomId,
-      transportId,
-      sctpStreamParameters,
-    });
-    this.server.to(roomId).except(client.id).emit('newDataProducer', {
-      dataProducerId: dataProducer.id,
-      peerId: client.id,
-      sctpStreamParameters,
-    });
-    return { dataProducerId: dataProducer.id, transportId };
+    try {
+      const dataProducer = await this.dataProducersService.createDataProducer({
+        peerId: client.id,
+        roomId,
+        transportId,
+        sctpStreamParameters,
+      });
+      this.server.to(roomId).except(client.id).emit('newDataProducer', {
+        dataProducerId: dataProducer.id,
+        peerId: client.id,
+        sctpStreamParameters,
+      });
+      return {
+        success: true,
+        data: { dataProducerId: dataProducer.id, transportId },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
+
   @SubscribeMessage('createDataConsumer')
   async createDataConsumer(
     @ConnectedSocket() client: Socket,
@@ -224,19 +281,27 @@ export class MediasoupGateway
       transportId,
     }: { roomId: string; dataProducerId: string; transportId: string },
   ) {
-    const dataConsumer = await this.dataProducersService.createDataConsumer({
-      roomId,
-      dataProducerId,
-      peerId: client.id,
-      transportId,
-    });
+    try {
+      const dataConsumer = await this.dataProducersService.createDataConsumer({
+        roomId,
+        dataProducerId,
+        peerId: client.id,
+        transportId,
+      });
 
-    console.log({ dataConsumer });
-
-    return {
-      dataConsumerId: dataConsumer.id,
-      sctpStreamParameters: dataConsumer.sctpStreamParameters,
-    };
+      return {
+        success: true,
+        data: {
+          dataConsumerId: dataConsumer.id,
+          sctpStreamParameters: dataConsumer.sctpStreamParameters,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('resumeProducer')
@@ -244,9 +309,19 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(resumeProducerSchema))
     { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.producersService.resumeProducer(roomId, producerId);
-    this.server.to(roomId).emit('producerResumed', { producerId });
-    return true;
+    try {
+      await this.producersService.resumeProducer(roomId, producerId);
+      this.server.to(roomId).emit('producerResumed', { producerId });
+      return {
+        success: true,
+        data: { isResumed: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('pauseProducer')
@@ -254,9 +329,19 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(pauseProducerSchema))
     { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.producersService.pauseProducer(roomId, producerId);
-    this.server.to(roomId).emit('producerPaused', { producerId });
-    return true;
+    try {
+      await this.producersService.pauseProducer(roomId, producerId);
+      this.server.to(roomId).emit('producerPaused', { producerId });
+      return {
+        success: true,
+        data: { isPaused: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('closeProducer')
@@ -265,10 +350,20 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(closeProducerSchema))
     { producerId, roomId }: { producerId: string; roomId: string },
   ) {
-    await this.producersService.closeProducer(roomId, producerId);
-    await this.roomService.deleteProducer(roomId, client.id, producerId);
-    this.server.to(roomId).emit('producerClosed', { producerId });
-    return true;
+    try {
+      await this.producersService.closeProducer(roomId, producerId);
+      await this.roomService.deleteProducer(roomId, client.id, producerId);
+      this.server.to(roomId).emit('producerClosed', { producerId });
+      return {
+        success: true,
+        data: { isClosed: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('resumeConsumer')
@@ -276,19 +371,39 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(resumeConsumerSchema))
     { consumerId, roomId }: { consumerId: string; roomId: string },
   ) {
-    await this.consumersService.resumeConsumer(roomId, consumerId);
-    this.server.to(roomId).emit('consumerResumed', { consumerId });
-    return true;
+    try {
+      await this.consumersService.resumeConsumer(roomId, consumerId);
+      this.server.to(roomId).emit('consumerResumed', { consumerId });
+      return {
+        success: true,
+        data: { isResumed: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
+
   @SubscribeMessage('getRouterRtpCapabilities')
   async getRouterRtpCapabilities(
     @MessageBody(new ZodValidationPipe(getRouterRtpCapabilitiesSchema))
     { roomId }: { roomId: string },
   ) {
-    return {
-      routerRtpCapabilities:
-        await this.roomService.getRouterRtpCapabilities(roomId),
-    };
+    try {
+      const routerRtpCapabilities =
+        await this.roomService.getRouterRtpCapabilities(roomId);
+      return {
+        success: true,
+        data: { routerRtpCapabilities },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 
   @SubscribeMessage('setPresenter')
@@ -297,16 +412,25 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(setPresenterSchema))
     { roomId }: SetPresenterDto,
   ) {
-    const existingPresenter = this.roomService.getPresenter(roomId);
-    if (existingPresenter) {
-      this.server.to(roomId).emit('presenterRemoved');
+    try {
+      const existingPresenter = this.roomService.getPresenter(roomId);
+      if (existingPresenter) {
+        this.server.to(roomId).emit('presenterRemoved');
+      }
+
+      await this.roomService.setPresenter(roomId, client.id);
+      this.server.to(roomId).emit('newPresenter', { peerId: client.id });
+
+      return {
+        success: true,
+        data: { isPresenter: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
     }
-
-    await this.roomService.setPresenter(roomId, client.id);
-
-    this.server.to(roomId).emit('newPresenter', { peerId: client.id });
-
-    return true;
   }
 
   @SubscribeMessage('removePresenter')
@@ -314,9 +438,18 @@ export class MediasoupGateway
     @MessageBody(new ZodValidationPipe(removePresenterSchema))
     { roomId }: SetPresenterDto,
   ) {
-    await this.roomService.removePresenter(roomId);
-    console.log('presenter removed');
-    this.server.to(roomId).emit('presenterRemoved');
-    return true;
+    try {
+      await this.roomService.removePresenter(roomId);
+      this.server.to(roomId).emit('presenterRemoved');
+      return {
+        success: true,
+        data: { isRemoved: true },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error)?.message ?? 'internal server error',
+      };
+    }
   }
 }
