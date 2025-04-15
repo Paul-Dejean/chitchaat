@@ -309,18 +309,18 @@ export class RoomClient {
 
   async enableWebcam({ produce = true }: { produce?: boolean } = {}) {
     if (this.videoProducer) {
-      return this.localMedia.getVideoStream();
+      return;
+    }
+    if (this.desktopProducer) {
+      await this.disableScreenSharing();
     }
     const stream = await this.localMedia.getVideoStream();
     const track = stream.getVideoTracks()[0];
     if (produce) {
       this.videoProducer = await this.mediasoupClient.createProducer(track);
     }
-    if (this.desktopProducer) {
-      await this.disableScreenSharing();
-    }
+
     this.store.dispatch(roomActions.toggleVideo({ shouldEnableVideo: true }));
-    return stream;
   }
 
   async disableWebcam() {
@@ -335,15 +335,15 @@ export class RoomClient {
 
   async enableScreenSharing() {
     if (this.desktopProducer) {
-      return this.localMedia.getScreenStream();
+      return;
+    }
+    if (this.videoProducer) {
+      await this.disableWebcam();
     }
     const stream = await this.localMedia.getScreenStream();
     const track = stream.getVideoTracks()[0];
     this.desktopProducer = await this.mediasoupClient.createProducer(track);
     this.desktopProducer?.on("trackended", () => this.disableScreenSharing());
-    if (this.videoProducer) {
-      await this.disableWebcam();
-    }
 
     await this.wsClient.emitMessage("setPresenter", {
       roomId: this.mediasoupClient.roomId,
@@ -351,7 +351,6 @@ export class RoomClient {
     this.store.dispatch(
       roomActions.toggleScreenSharing({ shouldEnableScreenSharing: true })
     );
-    return stream;
   }
 
   async disableScreenSharing() {
@@ -378,7 +377,6 @@ export class RoomClient {
   async enableMicrophone({ produce = true }: { produce?: boolean } = {}) {
     if (this.microphoneProducer) {
       await this.mediasoupClient.resumeProducer(this.microphoneProducer.id);
-      return this.localMedia.getAudioStream();
     }
     const stream = await this.localMedia.getAudioStream();
     const track = stream.getAudioTracks()[0];
@@ -387,7 +385,6 @@ export class RoomClient {
         await this.mediasoupClient.createProducer(track);
     }
     this.store.dispatch(roomActions.toggleAudio({ isMicrophoneEnabled: true }));
-    return stream;
   }
 
   async disableMicrophone() {
