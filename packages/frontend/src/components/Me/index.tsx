@@ -19,7 +19,7 @@ export function Me() {
 
   return (
     <AudioVideoPlayer
-      audioTrack={audioTrack}
+      audioTrack={isMicrophoneEnabled ? audioTrack : null}
       videoTrack={videoTrack}
       displayName="You"
       isAudioEnabled={isMicrophoneEnabled}

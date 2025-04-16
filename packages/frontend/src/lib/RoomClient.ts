@@ -376,7 +376,7 @@ export class RoomClient {
 
   async enableMicrophone({ produce = true }: { produce?: boolean } = {}) {
     if (this.microphoneProducer) {
-      await this.mediasoupClient.resumeProducer(this.microphoneProducer.id);
+      return;
     }
     const stream = await this.localMedia.getAudioStream();
     const track = stream.getAudioTracks()[0];
@@ -389,10 +389,13 @@ export class RoomClient {
 
   async disableMicrophone() {
     if (this.microphoneProducer) {
-      await this.mediasoupClient.pauseProducer(this.microphoneProducer.id);
+      this.localMedia.stopAudioStream();
+      this.microphoneProducer.close();
+      this.mediasoupClient.closeProducer(this.microphoneProducer.id);
       this.store.dispatch(
         roomActions.toggleAudio({ isMicrophoneEnabled: false })
       );
+      this.microphoneProducer = null;
     }
     this.store.dispatch(
       roomActions.toggleAudio({ isMicrophoneEnabled: false })
